@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="Anamorph" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/Anamorph" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="-DDEBUG=1" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/Anamorph" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O3" />
+					<Add option="-DDEBUG=0" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-std=c11" />
+			<Add option="-m64" />
+			<Add directory="inc" />
+		</Compiler>
+		<Linker>
+			<Add option="-m64" />
+			<Add library="libglfw3" />
+			<Add library="glew32s" />
+			<Add library="opengl32" />
+			<Add library="gdi32" />
+			<Add directory="lib/glfw3_64" />
+			<Add directory="lib/glew_64" />
+		</Linker>
+		<Unit filename="inc/ProjectionGen/projectionGen.h" />
+		<Unit filename="inc/debug/debug.h" />
+		<Unit filename="inc/filereader/filereader.h" />
+		<Unit filename="inc/glUtils/gl_utils.h" />
+		<Unit filename="inc/glew/glew.h" />
+		<Unit filename="inc/glfw3/glfw3.h" />
+		<Unit filename="inc/gui/gui.h" />
+		<Unit filename="inc/gui/guiUserDefined.h" />
+		<Unit filename="inc/xmlReader/stringutils.h" />
+		<Unit filename="inc/xmlReader/xmlReader.h" />
+		<Unit filename="res/frag_default.glsl" />
+		<Unit filename="res/vertex_default.glsl" />
+		<Unit filename="src/ProjectionGen/projectionGen.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/filereader/filereader.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/glUtils/gl_utils.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/gui/gui.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/gui/guiUserDefined.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/xmlReader/stringutils.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/xmlReader/xmlReader.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+			<fortran_project />
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

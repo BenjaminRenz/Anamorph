@@ -1,0 +1,312 @@
+<guilayout>
+	<texture resolution="1024" path="./res/gui.bmp"/>
+	<scene id="0">
+		<layer id="0" active="1">
+			<hdiv perc="0.975">
+				<vdiv perc="0.87"/>
+				<vdiv perc="0.10">
+					<element OnClickFPid="0" z=".5" align="r" texcord="0.0 0.0 200.0 200.0" active="1" aspr="1.0"/>
+					<element OnClickFPid="0" z=".75" align="r" texcord="512.0 768.0 712.0 968.0" active="1" aspr="1.0"/>
+					<element OnClickFPid="1" z="1.0" align="r" texcord="256.0 0.0 456.0 200.0" active="1" aspr="1.0"/>
+				</vdiv>
+				<vdiv perc="0.03"/>
+			</hdiv>
+			<hdiv perc="0.025"/>
+		</layer>
+		<layer id="1" active="0">
+			<hdiv perc="0.975">
+				<vdiv perc="0.87"/>
+				<vdiv perc="0.10">
+					<element OnClickFPid="0" z=".5" align="r" texcord="0.0 0.0 200.0 200.0" active="1" aspr="1.0"/>
+					<element OnClickFPid="0" z=".75" align="r" texcord="512.0 768.0 712.0 968.0" active="1" aspr="1.0"/>
+					<element OnClickFPid="1" z="1.0" align="r" texcord="256.0 256.0 456.0 456.0" active="1" aspr="1.0"/>
+				</vdiv>
+				<vdiv perc="0.03"/>
+			</hdiv>
+			<hdiv perc="0.025"/>
+		</layer>
+		<layer id="2" active="0">
+			<hdiv perc="0.975">
+				<vdiv perc="0.87"/>
+				<vdiv perc="0.10">
+					<element OnClickFPid="0" z=".5" align="r" texcord="0.0 0.0 200.0 200.0" active="1" aspr="1.0"/>
+					<element OnClickFPid="0" z=".75" align="r" texcord="512.0 768.0 712.0 968.0" active="1" aspr="1.0"/>
+					<element OnClickFPid="1" z="1.0" align="r" texcord="256.0 512.0 456.0 712.0" active="1" aspr="1.0"/>
+				</vdiv>
+				<vdiv perc="0.03"/>
+			</hdiv>
+			<hdiv perc="0.025"/>
+		</layer>
+		<layer id="3" active="0">
+			<hdiv perc="0.975">
+				<vdiv perc="0.87"/>
+				<vdiv perc="0.10">
+					<element OnClickFPid="0" z=".5" align="r" texcord="0.0 0.0 200.0 200.0" active="1" aspr="1.0"/>
+					<element OnClickFPid="0" z=".75" align="r" texcord="512.0 768.0 712.0 968.0" active="1" aspr="1.0"/>
+					<element OnClickFPid="1" z="1.0" align="r" texcord="256.0 768.0 456.0 968.0" active="1" aspr="1.0"/>
+				</vdiv>
+				<vdiv perc="0.03"/>
+			</hdiv>
+			<hdiv perc="0.025"/>
+		</layer>
+		<layer id="4" active="0">
+			<vdiv perc="0.87"/>
+			<vdiv perc="0.10">
+				<hdiv perc="0.69375"/>
+				<hdiv perc="0.028125">
+					<element OnClickFPid="0" z=".5" align="r" texcord="0.0 0.0 100.0 200.0" active="1" aspr="0.5"/>
+				</hdiv>
+				<hdiv perc="0.225">
+					<element OnClickFPid="0" z=".5" align="r" texcord="99.0 0.0 101.0 200.0" active="1" aspr="4.0"/>
+				</hdiv>
+				<hdiv perc="0.028125">
+					<element OnClickFPid="0" z=".5" align="r" texcord="100.0 0.0 200.0 200.0" active="1" aspr="0.5"/>
+				</hdiv>
+				<hdiv perc="0.025"/>
+			</vdiv>
+			<vdiv perc="0.03"/>
+		</layer>
+		<layer id="5" active="0">
+			<vdiv perc="0.87"/>
+			<vdiv perc="0.10">
+				<hdiv perc="0.69375"/>
+				<hdiv perc="0.05625">
+					<element OnClickFPid="2" z="1.0" align="r" texcord="256.0 768.0 456.0 968.0" active="1" aspr="1.0"/>
+				</hdiv>
+				<hdiv perc="0.05625">
+					<element OnClickFPid="3" z="1.0" align="r" texcord="256.0 512.0 456.0 712.0" active="1" aspr="1.0"/>
+				</hdiv>
+				<hdiv perc="0.05625">
+					<element OnClickFPid="4" z="1.0" align="r" texcord="256.0 256.0 456.0 456.0" active="1" aspr="1.0"/>
+				</hdiv>
+				<hdiv perc="0.05625">
+					<element OnClickFPid="5" z="1.0" align="r" texcord="256.0 0.0 456.0 200.0" active="1" aspr="1.0"/>
+				</hdiv>
+				<hdiv perc="0.08125"/>
+			</vdiv>
+			<vdiv perc="0.03"/>
+		</layer>
+		
+		
+		<layer id="6" active="0">
+			<hdiv perc="0.975">
+				<vdiv perc="0.74"/>
+				<vdiv perc="0.10">
+					<element OnClickFPid="0" z=".5" align="r" texcord="0.0 0.0 200.0 200.0" active="1" aspr="1.0"/>
+					<element OnClickFPid="0" z=".75" align="r" texcord="512.0 768.0 712.0 968.0" active="1" aspr="1.0"/>
+					<element OnClickFPid="6" z="1.0" align="r" texcord="512.0 0.0 712.0 200.0" active="1" aspr="1.0"/>
+				</vdiv>
+				<vdiv perc="0.16"/>
+			</hdiv>
+			<hdiv perc="0.025"/>
+		</layer>
+		<layer id="7" active="1">
+			<hdiv perc="0.975">
+				<vdiv perc="0.74"/>
+				<vdiv perc="0.10">
+					<element OnClickFPid="0" z=".5" align="r" texcord="0.0 0.0 200.0 200.0" active="1" aspr="1.0"/>
+					<element OnClickFPid="0" z=".75" align="r" texcord="512.0 768.0 712.0 968.0" active="1" aspr="1.0"/>
+					<element OnClickFPid="6" z="1.0" align="r" texcord="512.0 256.0 712.0 456.0" active="1" aspr="1.0"/>
+				</vdiv>
+				<vdiv perc="0.16"/>
+			</hdiv>
+			<hdiv perc="0.025"/>
+		</layer>
+		<layer id="8" active="0">
+			<hdiv perc="0.975">
+				<vdiv perc="0.74"/>
+				<vdiv perc="0.10">
+					<element OnClickFPid="0" z=".5" align="r" texcord="0.0 0.0 200.0 200.0" active="1" aspr="1.0"/>
+					<element OnClickFPid="0" z=".75" align="r" texcord="512.0 768.0 712.0 968.0" active="1" aspr="1.0"/>
+					<element OnClickFPid="6" z="1.0" align="r" texcord="512.0 512.0 712.0 712.0" active="1" aspr="1.0"/>
+				</vdiv>
+				<vdiv perc="0.16"/>
+			</hdiv>
+			<hdiv perc="0.025"/>
+		</layer>
+		<layer id="9" active="0">
+			<vdiv perc="0.74"/>
+			<vdiv perc="0.10">
+				<hdiv perc="0.75"/>
+				<hdiv perc="0.028125">
+					<element OnClickFPid="0" z=".5" align="r" texcord="0.0 0.0 100.0 200.0" active="1" aspr="0.5"/>
+				</hdiv>
+				<hdiv perc="0.16875">
+					<element OnClickFPid="0" z=".5" align="r" texcord="99.0 0.0 101.0 200.0" active="1" aspr="3.0"/>
+				</hdiv>
+				<hdiv perc="0.028125">
+					<element OnClickFPid="0" z=".5" align="r" texcord="100.0 0.0 200.0 200.0" active="1" aspr="0.5"/>
+				</hdiv>
+				<hdiv perc="0.025"/>
+			</vdiv>
+			<vdiv perc="0.16"/>
+		</layer>
+		<layer id="10" active="0">
+			<vdiv perc="0.74"/>
+			<vdiv perc="0.10">
+				<hdiv perc="0.75"/>
+				<hdiv perc="0.05625">
+					<element OnClickFPid="7" z="1.0" align="r" texcord="512.0 512.0 712.0 712.0" active="1" aspr="1.0"/>
+				</hdiv>
+				<hdiv perc="0.05625">
+					<element OnClickFPid="8" z="1.0" align="r" texcord="512.0 256.0 712.0 456.0" active="1" aspr="1.0"/>
+				</hdiv>
+				<hdiv perc="0.05625">
+					<element OnClickFPid="9" z="1.0" align="r" texcord="512.0 0.0 712.0 200.0" active="1" aspr="1.0"/>
+				</hdiv>
+				<hdiv perc="0.08125"/>
+			</vdiv>
+			<vdiv perc="0.16"/>
+		</layer>
+		
+		
+		<layer id="11" active="1">
+			<hdiv perc="0.975">
+				<vdiv perc="0.61"/>
+				<vdiv perc="0.10">
+					<element OnClickFPid="0" z=".5" align="r" texcord="0.0 0.0 200.0 200.0" active="1" aspr="1.0"/>
+					<element OnClickFPid="10" z="1.0" align="r" texcord="0.0 768.0 200.0 968.0" active="1" aspr="1.0"/>
+				</vdiv>
+				<vdiv perc="0.29"/>
+			</hdiv>
+			<hdiv perc="0.025"/>
+		</layer>
+		
+		
+		<layer id="12" active="0">
+			<hdiv perc="0.48"/>
+			<hdiv perc="0.04">
+				<element z="1.0" align="r" texcord="0.0 256.0 200.0 456.0" active="1" aspr="1.0"/>
+			</hdiv>
+			<hdiv perc="0.455">
+				<vdiv perc="0.48"/>
+				<vdiv perc="0.10">
+					<element OnClickFPid="0" z=".5" align="r" texcord="0.0 0.0 200.0 200.0" active="1" aspr="1.0"/>
+					<element OnClickFPid="0" z=".75" align="r" texcord="512.0 768.0 712.0 968.0" active="1" aspr="1.0"/>
+					<element OnClickFPid="11" z="1.0" align="r" texcord="0.0 256.0 200.0 456.0" active="1" aspr="1.0"/>
+				</vdiv>
+				<vdiv perc="0.42"/>
+			</hdiv>
+			<hdiv perc="0.025"/>
+		</layer>
+		<layer id="13" active="1">
+			<hdiv perc="0.48"/>
+			<hdiv perc="0.04">
+				<element z="1.0" texcord="0.0 512.0 200.0 712.0" active="1" aspr="1.0"/>
+			</hdiv>
+			<hdiv perc="0.455">
+				<vdiv perc="0.48"/>
+				<vdiv perc="0.10">
+					<element OnClickFPid="0" z=".5" align="r" texcord="0.0 0.0 200.0 200.0" active="1" aspr="1.0"/>
+					<element OnClickFPid="0" z=".75" align="r" texcord="512.0 768.0 712.0 968.0" active="1" aspr="1.0"/>
+					<element OnClickFPid="11" z="1.0" align="r" texcord="0.0 512.0 200.0 712.0" active="1" aspr="1.0"/>
+				</vdiv>
+				<vdiv perc="0.42"/>
+			</hdiv>
+			<hdiv perc="0.025"/>
+		</layer>
+		<layer id="14" active="0">
+			<vdiv perc="0.48"/>
+			<vdiv perc="0.10">
+				<hdiv perc="0.80625"/>
+				<hdiv perc="0.028125">
+					<element OnClickFPid="0" z=".5" align="r" texcord="0.0 0.0 100.0 200.0" active="1" aspr="0.5"/>
+				</hdiv>
+				<hdiv perc="0.1125">
+					<element OnClickFPid="0" z=".5" align="r" texcord="99.0 0.0 101.0 200.0" active="1" aspr="2.0"/>
+				</hdiv>
+				<hdiv perc="0.028125">
+					<element OnClickFPid="0" z=".5" align="r" texcord="100.0 0.0 200.0 200.0" active="1" aspr="0.5"/>
+				</hdiv>
+				<hdiv perc="0.025"/>
+			</vdiv>
+			<vdiv perc="0.42"/>
+		</layer>
+		<layer id="15" active="0">
+			<vdiv perc="0.48"/>
+			<vdiv perc="0.10">
+				<hdiv perc="0.80625"/>
+				<hdiv perc="0.05625">
+					<element OnClickFPid="12" z="1.0" align="r" texcord="0.0 256.0 200.0 456.0" active="1" aspr="1.0"/>
+				</hdiv>
+				<hdiv perc="0.05625">
+					<element OnClickFPid="13" z="1.0" align="r" texcord="0.0 512.0 200.0 712.0" active="1" aspr="1.0"/>
+				</hdiv>
+				<hdiv perc="0.08125"/>
+			</vdiv>
+			<vdiv perc="0.42"/>
+		</layer>
+		
+		
+		<layer id="16" active="1">
+			<hdiv perc="0.975">
+				<vdiv perc="0.35"/>
+				<vdiv perc="0.10">
+					<element OnClickFPid="0" z=".5" align="r" texcord="0.0 0.0 200.0 200.0" active="1" aspr="1.0"/>
+					<element OnClickFPid="0" z=".75" align="r" texcord="512.0 768.0 712.0 968.0" active="1" aspr="1.0"/>
+					<element OnClickFPid="14" z="1.0" align="r" texcord="768.0 0.0 968.0 200.0" active="1" aspr="1.0"/>
+				</vdiv>
+				<vdiv perc="0.55"/>
+			</hdiv>
+			<hdiv perc="0.025"/>
+		</layer>
+		<layer id="17" active="0">
+			<hdiv perc="0.975">
+				<vdiv perc="0.35"/>
+				<vdiv perc="0.10">
+					<element OnClickFPid="0" z=".5" align="r" texcord="0.0 0.0 200.0 200.0" active="1" aspr="1.0"/>
+					<element OnClickFPid="0" z=".75" align="r" texcord="512.0 768.0 712.0 968.0" active="1" aspr="1.0"/>
+					<element OnClickFPid="14" z="1.0" align="r" texcord="768.0 256.0 968.0 456.0" active="1" aspr="1.0"/>
+				</vdiv>
+				<vdiv perc="0.55"/>
+			</hdiv>
+			<hdiv perc="0.025"/>
+		</layer>
+		<layer id="18" active="0">
+			<hdiv perc="0.975">
+				<vdiv perc="0.35"/>
+				<vdiv perc="0.10">
+					<element OnClickFPid="0" z=".5" align="r" texcord="0.0 0.0 200.0 200.0" active="1" aspr="1.0"/>
+					<element OnClickFPid="0" z=".75" align="r" texcord="512.0 768.0 712.0 968.0" active="1" aspr="1.0"/>
+					<element OnClickFPid="14" z="1.0" align="r" texcord="768.0 512.0 968.0 712.0" active="1" aspr="1.0"/>
+				</vdiv>
+				<vdiv perc="0.55"/>
+			</hdiv>
+			<hdiv perc="0.025"/>
+		</layer>
+		<layer id="19" active="0">
+			<vdiv perc="0.35"/>
+			<vdiv perc="0.10">
+				<hdiv perc="0.75"/>
+				<hdiv perc="0.028125">
+					<element OnClickFPid="0" z=".5" align="r" texcord="0.0 0.0 100.0 200.0" active="1" aspr="0.5"/>
+				</hdiv>
+				<hdiv perc="0.16875">
+					<element OnClickFPid="0" z=".5" align="r" texcord="99.0 0.0 101.0 200.0" active="1" aspr="3.0"/>
+				</hdiv>
+				<hdiv perc="0.028125">
+					<element OnClickFPid="0" z=".5" align="r" texcord="100.0 0.0 200.0 200.0" active="1" aspr="0.5"/>
+				</hdiv>
+				<hdiv perc="0.025"/>
+			</vdiv>
+			<vdiv perc="0.55"/>
+		</layer>
+		<layer id="20" active="0">
+			<vdiv perc="0.35"/>
+			<vdiv perc="0.10">
+				<hdiv perc="0.75"/>
+				<hdiv perc="0.05625">
+					<element OnClickFPid="15" z="1.0" align="r" texcord="768.0 512.0 968.0 712.0" active="1" aspr="1.0"/>
+				</hdiv>
+				<hdiv perc="0.05625">
+					<element OnClickFPid="16" z="1.0" align="r" texcord="768.0 256.0 968.0 456.0" active="1" aspr="1.0"/>
+				</hdiv>
+				<hdiv perc="0.05625">
+					<element OnClickFPid="17" z="1.0" align="r" texcord="768.0 0.0 968.0 200.0" active="1" aspr="1.0"/>
+				</hdiv>
+				<hdiv perc="0.08125"/>
+			</vdiv>
+			<vdiv perc="0.55"/>
+		</layer>
+	</scene>
+</guilayout>

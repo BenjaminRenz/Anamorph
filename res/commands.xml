@@ -1,0 +1,13 @@
+<commands>
+	<delay ms="1000"/>
+	<line ms="5000" xycoord="-0.5 -0.85 -0.5 0.5"/>
+	<line ms="5000" xycoord="-0.5 0.5 0.5 0.5"/>
+	<line ms="5000" xycoord="0.5 0.5 0.5 -0.85"/>
+	<delay ms="1000"/>
+	<line ms="5000" xycoord="-0.18 -0.98 -0.18 -0.5"/>
+	<delay ms="10000"/>
+	<clear/>
+	<switchgrid num="5"/>
+	<delay ms="20000"/>
+	<switchgrid num="1"/>
+</commands>
