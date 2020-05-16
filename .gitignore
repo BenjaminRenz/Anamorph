@@ -1,3 +1,5 @@
 
 *.layout
 *.save-failed
+*.o
+*.depend
