@@ -49,7 +49,13 @@ void append_DynamicList(struct DynamicList** ListOrNullpp,void* newElementp,size
     struct DynamicList* oldDynList=(*ListOrNullpp);
     struct DynamicList* newDynList;
     if(oldDynList){//Does already exist, so increase storage space
+        if(oldDynList->type!=typeId){
+            dprintf(DBGT_ERROR,"List type missmatch");
+            dprintf(DBGT_ERROR,"was %x,new %x",oldDynList->type,typeId);
+            exit(-1);
+        }
         newDynList=realloc(oldDynList,sizeof(struct DynamicList)+sizeofListElements*(1+oldDynList->itemcnt));
+        //DO NOT USE oldDynList or (*ListOrNullpp) variable after this statement, is is invalid
         newDynList->itemcnt++;
     }else{
         newDynList=(struct DynamicList*)malloc(sizeof(struct DynamicList)+sizeofListElements);
@@ -340,9 +346,9 @@ struct DynamicList* getValueFromKeyName(struct DynamicList* attlist,struct Dynam
         return 0;
     }
     for(uint32_t index=0;index<attlist->itemcnt;index++){
-        if(compareEqualDynamicUTF32List(((struct key_val_pair**)attlist->items)[index]->key,nameDl)){
+        if(compareEqualDynamicUTF32List(((struct key_val_pair*)attlist->items)[index].key,nameDl)){
             delete_DynList(nameDl);
-            return ((struct key_val_pair**)attlist->items)[index]->value;
+            return ((struct key_val_pair*)attlist->items)[index].value;
         }
     }
     delete_DynList(nameDl);

@@ -132,15 +132,43 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
             globalCommandBufferOutp->parent=0;
             drawMode=drawModeActive;
             GlobalAppState.clear_drawingplane=1;
+            stopDeltatimeForLine=glfwGetTime();     //for initial delay
             break;
         }
     }
 }
 
 void MouseButtonCallback(GLFWwindow* GLFW_window,int button, int action, int mods){
-    if(button==GLFW_MOUSE_BUTTON_LEFT&&action==GLFW_PRESS){
+    if(button==GLFW_MOUSE_BUTTON_LEFT&&action==GLFW_PRESS&&drawMode==drawModeActive){
         if(!draw_enabled){  //if this is the first point
             dprintf(DBGT_INFO,"first point");
+            //set delay
+            struct xmlTreeElement* delayTag=(struct xmlTreeElement*)malloc(sizeof(struct xmlTreeElement));
+            delayTag->name=stringToUTF32Dynlist("delay");
+            delayTag->attributes=0;
+            delayTag->parent=globalCommandBufferOutp;
+            delayTag->content=0;
+            delayTag->type=xmltype_tag;
+            append_DynamicList(&globalCommandBufferOutp->content,&delayTag,sizeof(struct xmlTreeElement*),dynlisttype_xmlELMNTCollectionp);
+
+            //find out deltat
+            double deltat=(glfwGetTime()-stopDeltatimeForLine);
+            struct key_val_pair delay_ms_key_val;
+            delay_ms_key_val.key=stringToUTF32Dynlist("ms");
+            uint32_t requieredCharsForMs=snprintf(NULL,0,"%lf",deltat);
+            struct DynamicList* TempFloatStringForMs=create_DynamicList(sizeof(uint32_t),requieredCharsForMs,dynlisttype_utf32chars);
+            uint8_t* tempASCIIStringp=(uint8_t*)malloc((requieredCharsForMs+1)*sizeof(uint8_t));
+            snprintf((char*)tempASCIIStringp,requieredCharsForMs+1,"%lf",deltat);
+            utf8_to_utf32(tempASCIIStringp,requieredCharsForMs,TempFloatStringForMs->items);
+            free(tempASCIIStringp);
+            delay_ms_key_val.value=TempFloatStringForMs;
+            //append to attributes
+            append_DynamicList(&delayTag->attributes,&delay_ms_key_val,sizeof(struct key_val_pair),dynlisttype_keyValuePairsp);
+
+
+
+
+
             double xtouchpos=0.0;
             double ytouchpos=0.0;
             glfwGetCursorPos(GLFW_window,&xtouchpos,&ytouchpos);
@@ -151,7 +179,8 @@ void MouseButtonCallback(GLFWwindow* GLFW_window,int button, int action, int mod
             glfwGetWindowSize(GLFW_window,&screenresx,&screenresy);     //TODO make this global?
             int32_t mapped_x_pos=0;
             int32_t mapped_y_pos=0;
-            switch(mapPoints(&mapped_x_pos,&mapped_y_pos,xpos,screenresy-ypos,screenresx,screenresy,widthMM,heightMM)){
+            ypos=screenresy-ypos;
+            switch(mapPoints(&mapped_x_pos,&mapped_y_pos,xpos,ypos,screenresx,screenresy,widthMM,heightMM)){
             case mapPoints_return_from_o:
                 xpos=mapped_x_pos;
                 ypos=mapped_y_pos;
@@ -164,24 +193,25 @@ void MouseButtonCallback(GLFWwindow* GLFW_window,int button, int action, int mod
                 newLineElementp->attributes=0;
                 newLineElementp->type=xmltype_tag;
                 //append to our global command buffer for later output
-                append_DynamicList(&(globalCommandBufferOutp->content),newLineElementp,sizeof(struct xmlTreeElement**),dynlisttype_xmlELMNTCollectionp);
+                append_DynamicList(&(globalCommandBufferOutp->content),&newLineElementp,sizeof(struct xmlTreeElement*),dynlisttype_xmlELMNTCollectionp);
                 newLineElementp->parent=globalCommandBufferOutp;
 
                 xtouchpos=((double)xpos-screenresx/2)*mm_per_px/outerCone_rad_mm;
                 ytouchpos=((double)ypos-screenresy/2)*mm_per_px/outerCone_rad_mm;
-                uint32_t requieredCharsForXy=snprintf(NULL,0,"%lf %lf ",xtouchpos,ytouchpos)-1;
+                uint32_t requieredCharsForXy=snprintf(NULL,0,"%lf %lf ",xtouchpos,ytouchpos);
                 struct DynamicList* TempFloatString=create_DynamicList(sizeof(uint32_t),requieredCharsForXy,dynlisttype_utf32chars);
-                uint8_t* tempASCIIStringp=(uint8_t*)malloc((requieredCharsForXy+1)*sizeof(uint8_t));
-                snprintf((char*)tempASCIIStringp,requieredCharsForXy+1,"%lf %lf ",xtouchpos,ytouchpos);
+                uint8_t* tempASCIIStringp=(uint8_t*)malloc((requieredCharsForXy+1)*sizeof(uint8_t));                //+1 because zero termination
+                snprintf((char*)tempASCIIStringp,requieredCharsForXy+1,"%lf %lf ",xtouchpos,ytouchpos);             //+1 because zero termination
                 utf8_to_utf32(tempASCIIStringp,requieredCharsForXy,TempFloatString->items);
                 free(tempASCIIStringp);
 
                 stopDeltatimeForLine=glfwGetTime();
 
-                struct key_val_pair* line_key_valp=(struct key_val_pair*)malloc(sizeof(struct key_val_pair));
-                line_key_valp->key=stringToUTF32Dynlist("xycoord");
-                line_key_valp->value=TempFloatString;
-                append_DynamicList(&(newLineElementp->attributes),line_key_valp,sizeof(struct key_val_pair*),dynlisttype_keyValuePairsp);
+                struct key_val_pair line_key_valp;
+                line_key_valp.key=stringToUTF32Dynlist("xycoord");
+                line_key_valp.value=TempFloatString;
+                append_DynamicList(&(newLineElementp->attributes),&line_key_valp,sizeof(struct key_val_pair),dynlisttype_keyValuePairsp);
+                //dprintf(DBGT_ERROR,"Value as First: %s",utf32dynlist_to_string(TempFloatString));
                 break;
             case mapPoints_return_could_not_map:
                 exit(-1);
@@ -189,7 +219,7 @@ void MouseButtonCallback(GLFWwindow* GLFW_window,int button, int action, int mod
             }
             draw_enabled=1;
         }
-    }else if(button==GLFW_MOUSE_BUTTON_LEFT&&action==GLFW_RELEASE){
+    }else if(button==GLFW_MOUSE_BUTTON_LEFT&&action==GLFW_RELEASE&&drawMode==drawModeActive){
         if(draw_enabled&&drawMode==drawModeActive){     //set last point in line
             dprintf(DBGT_INFO,"last point");
             double xtouchpos=0.0;
@@ -202,7 +232,8 @@ void MouseButtonCallback(GLFWwindow* GLFW_window,int button, int action, int mod
             glfwGetWindowSize(GLFW_window,&screenresx,&screenresy);     //TODO make this global?
             int32_t mapped_x_pos=0;
             int32_t mapped_y_pos=0;
-            switch(mapPoints(&mapped_x_pos,&mapped_y_pos,xpos,screenresy-ypos,screenresx,screenresy,widthMM,heightMM)){
+            ypos=screenresy-ypos;
+            switch(mapPoints(&mapped_x_pos,&mapped_y_pos,xpos,ypos,screenresx,screenresy,widthMM,heightMM)){
             case mapPoints_return_from_o:
                 xpos=mapped_x_pos;
                 ypos=mapped_y_pos;
@@ -211,7 +242,7 @@ void MouseButtonCallback(GLFWwindow* GLFW_window,int button, int action, int mod
                 //transform touch position and mapped point into 1,1 coordinate system
                 xtouchpos=((double)xpos-screenresx/2)*mm_per_px/outerCone_rad_mm;
                 ytouchpos=((double)ypos-screenresy/2)*mm_per_px/outerCone_rad_mm;
-                uint32_t requieredCharsForXy=snprintf(NULL,0,"%lf %lf ",xtouchpos,ytouchpos)-1;
+                uint32_t requieredCharsForXy=snprintf(NULL,0,"%lf %lf ",xtouchpos,ytouchpos);
                 struct DynamicList* TempFloatStringForXy=create_DynamicList(sizeof(uint32_t),requieredCharsForXy,dynlisttype_utf32chars);
                 uint8_t* tempASCIIStringp=(uint8_t*)malloc((requieredCharsForXy+1)*sizeof(uint8_t));
                 snprintf((char*)tempASCIIStringp,requieredCharsForXy+1,"%lf %lf ",xtouchpos,ytouchpos);
@@ -222,26 +253,29 @@ void MouseButtonCallback(GLFWwindow* GLFW_window,int button, int action, int mod
 
                 //find out deltat
                 double deltat=(glfwGetTime()-stopDeltatimeForLine);
-                struct key_val_pair* line_ms_key_valp=(struct key_val_pair*)malloc(sizeof(struct key_val_pair));
-                line_ms_key_valp->key=stringToUTF32Dynlist("ms");
-                uint32_t requieredCharsForMs=snprintf(NULL,0,"%lf",deltat)-1;
+                struct key_val_pair line_ms_key_val;
+                line_ms_key_val.key=stringToUTF32Dynlist("ms");
+                uint32_t requieredCharsForMs=snprintf(NULL,0,"%lf",deltat);
                 struct DynamicList* TempFloatStringForMs=create_DynamicList(sizeof(uint32_t),requieredCharsForMs,dynlisttype_utf32chars);
                 tempASCIIStringp=(uint8_t*)malloc((requieredCharsForMs+1)*sizeof(uint8_t));
                 snprintf((char*)tempASCIIStringp,requieredCharsForMs+1,"%lf",deltat);
                 utf8_to_utf32(tempASCIIStringp,requieredCharsForMs,TempFloatStringForMs->items);
                 free(tempASCIIStringp);
-                line_ms_key_valp->value=TempFloatStringForMs;
-
-                //append x2 and y2 to last line element
+                line_ms_key_val.value=TempFloatStringForMs;
+                //append to attributes
                 uint32_t index_of_last_line_elmnt=(globalCommandBufferOutp->content->itemcnt-1);
                 struct xmlTreeElement* lastLineElementp=((struct xmlTreeElement**)globalCommandBufferOutp->content->items)[index_of_last_line_elmnt];
+                append_DynamicList(&lastLineElementp->attributes,&line_ms_key_val,sizeof(struct key_val_pair),dynlisttype_keyValuePairsp);
+
+
+                //append x2 and y2 to last line element
                 //create the requiered space for the full set of x1 y1 x2 y2 coordinates
-                struct key_val_pair* oldLineOldKeyValp=((struct key_val_pair**)lastLineElementp->attributes->items)[0];        //xycoord should be the first element
-                struct DynamicList* oldLineNewStringp=create_DynamicList(sizeof(uint32_t),oldLineOldKeyValp->value->itemcnt+requieredCharsForXy,dynlisttype_utf32chars);
-                memcpy(oldLineNewStringp->items,oldLineOldKeyValp->value->items,sizeof(uint32_t)*(oldLineOldKeyValp->value->itemcnt));          //copy over previous string x1 y1
-                memcpy(oldLineNewStringp->items+oldLineOldKeyValp->value->itemcnt,TempFloatStringForXy->items,sizeof(uint32_t)*(requieredCharsForXy));  //copy new string x2 y2
-                delete_DynList(oldLineOldKeyValp->value);    //delete old string
-                oldLineOldKeyValp->value=oldLineNewStringp;  //update reference from value
+                struct key_val_pair oldLineOldKeyVal=((struct key_val_pair*)lastLineElementp->attributes->items)[0];        //xycoord should be the first element
+                struct DynamicList* oldLineNewStringp=create_DynamicList(sizeof(uint32_t),oldLineOldKeyVal.value->itemcnt+requieredCharsForXy,dynlisttype_utf32chars);
+                memcpy(oldLineNewStringp->items,oldLineOldKeyVal.value->items,sizeof(uint32_t)*(oldLineOldKeyVal.value->itemcnt));          //copy over previous string x1 y1
+                memcpy(((uint32_t*)oldLineNewStringp->items)+oldLineOldKeyVal.value->itemcnt,TempFloatStringForXy->items,sizeof(uint32_t)*(requieredCharsForXy));  //copy new string x2 y2
+                delete_DynList(oldLineOldKeyVal.value);    //delete old string
+                ((struct key_val_pair*)lastLineElementp->attributes->items)[0].value=oldLineNewStringp;  //update reference from value
 
                 break;
             case mapPoints_return_could_not_map:
@@ -354,7 +388,8 @@ void CursorPosCallback(GLFWwindow* GLFW_window, double xpos, double ypos){
         glfwGetWindowSize(GLFW_window,&screenresx,&screenresy);     //TODO make this global?
         int32_t mapped_x_pos=0;
         int32_t mapped_y_pos=0;
-        switch(mapPoints(&mapped_x_pos,&mapped_y_pos,xpos,screenresy-ypos,screenresx,screenresy,widthMM,heightMM)){
+        ypos=screenresy-ypos;
+        switch(mapPoints(&mapped_x_pos,&mapped_y_pos,xpos,ypos,screenresx,screenresy,widthMM,heightMM)){
         case mapPoints_return_from_o:
             xpos=mapped_x_pos;
             ypos=mapped_y_pos;
@@ -363,7 +398,7 @@ void CursorPosCallback(GLFWwindow* GLFW_window, double xpos, double ypos){
             //transform touch position and mapped point into 1,1 coordinate system
             xtouchpos=((double)xpos-screenresx/2)*mm_per_px/outerCone_rad_mm;
             ytouchpos=((double)ypos-screenresy/2)*mm_per_px/outerCone_rad_mm;
-            uint32_t requieredCharsForXy=snprintf(NULL,0,"%lf %lf ",xtouchpos,ytouchpos)-1;
+            uint32_t requieredCharsForXy=snprintf(NULL,0,"%lf %lf ",xtouchpos,ytouchpos);
             struct DynamicList* TempFloatStringForXy=create_DynamicList(sizeof(uint32_t),requieredCharsForXy,dynlisttype_utf32chars);
             uint8_t* tempASCIIStringp=(uint8_t*)malloc((requieredCharsForXy+1)*sizeof(uint8_t));
             snprintf((char*)tempASCIIStringp,requieredCharsForXy+1,"%lf %lf ",xtouchpos,ytouchpos);
@@ -374,27 +409,29 @@ void CursorPosCallback(GLFWwindow* GLFW_window, double xpos, double ypos){
 
             //find out deltat
             double deltat=(glfwGetTime()-stopDeltatimeForLine);
-            struct key_val_pair* line_ms_key_valp=(struct key_val_pair*)malloc(sizeof(struct key_val_pair));
-            line_ms_key_valp->key=stringToUTF32Dynlist("ms");
-            uint32_t requieredCharsForMs=snprintf(NULL,0,"%lf",deltat)-1;
+            struct key_val_pair line_ms_key_val;
+            line_ms_key_val.key=stringToUTF32Dynlist("ms");
+            uint32_t requieredCharsForMs=snprintf(NULL,0,"%lf",deltat);
             struct DynamicList* TempFloatStringForMs=create_DynamicList(sizeof(uint32_t),requieredCharsForMs,dynlisttype_utf32chars);
             tempASCIIStringp=(uint8_t*)malloc((requieredCharsForMs+1)*sizeof(uint8_t));
             snprintf((char*)tempASCIIStringp,requieredCharsForMs+1,"%lf",deltat);
             utf8_to_utf32(tempASCIIStringp,requieredCharsForMs,TempFloatStringForMs->items);
             free(tempASCIIStringp);
-            line_ms_key_valp->value=TempFloatStringForMs;
-
-            //append x2 and y2 to last line element
+            line_ms_key_val.value=TempFloatStringForMs;
+            //append to attributes
             uint32_t index_of_last_line_elmnt=(globalCommandBufferOutp->content->itemcnt-1);
             struct xmlTreeElement* lastLineElementp=((struct xmlTreeElement**)globalCommandBufferOutp->content->items)[index_of_last_line_elmnt];
-            //create the requiered space for the full set of x1 y1 x2 y2 coordinates
-            struct key_val_pair* oldLineOldKeyValp=((struct key_val_pair**)lastLineElementp->attributes->items)[0];        //xycoord should be the first element
-            struct DynamicList* oldLineNewStringp=create_DynamicList(sizeof(uint32_t),oldLineOldKeyValp->value->itemcnt+requieredCharsForXy,dynlisttype_utf32chars);
-            memcpy(oldLineNewStringp->items,oldLineOldKeyValp->value->items,sizeof(uint32_t)*(oldLineOldKeyValp->value->itemcnt));          //copy over previous string x1 y1
-            memcpy(oldLineNewStringp->items+oldLineOldKeyValp->value->itemcnt,TempFloatStringForXy->items,sizeof(uint32_t)*(requieredCharsForXy));  //copy new string x2 y2
-            delete_DynList(oldLineOldKeyValp->value);    //delete old string
-            oldLineOldKeyValp->value=oldLineNewStringp;  //update reference from value
+            append_DynamicList(&lastLineElementp->attributes,&line_ms_key_val,sizeof(struct key_val_pair),dynlisttype_keyValuePairsp);
 
+
+            //append x2 and y2 to last line element
+            //create the requiered space for the full set of x1 y1 x2 y2 coordinates
+            struct key_val_pair oldLineOldKeyVal=(((struct key_val_pair*)lastLineElementp->attributes->items)[0]);        //xycoord should be the first element
+            struct DynamicList* oldLineNewStringp=create_DynamicList(sizeof(uint32_t),oldLineOldKeyVal.value->itemcnt+requieredCharsForXy,dynlisttype_utf32chars);
+            memcpy(oldLineNewStringp->items,oldLineOldKeyVal.value->items,sizeof(uint32_t)*(oldLineOldKeyVal.value->itemcnt));          //copy over previous string x1 y1
+            memcpy(((uint32_t*)oldLineNewStringp->items)+(oldLineOldKeyVal.value->itemcnt),TempFloatStringForXy->items,sizeof(uint32_t)*(requieredCharsForXy));  //copy new string x2 y2
+            delete_DynList(oldLineOldKeyVal.value);    //delete old string
+            (((struct key_val_pair*)lastLineElementp->attributes->items)[0]).value=oldLineNewStringp;  //update reference from value
 
 
 
@@ -407,17 +444,17 @@ void CursorPosCallback(GLFWwindow* GLFW_window, double xpos, double ypos){
             newLineElementp->attributes=0;
             newLineElementp->type=xmltype_tag;
             //append to our global command buffer for later output
-            append_DynamicList(&(globalCommandBufferOutp->content),newLineElementp,sizeof(struct xmlTreeElement*),dynlisttype_xmlELMNTCollectionp);
+            append_DynamicList(&(globalCommandBufferOutp->content),&newLineElementp,sizeof(struct xmlTreeElement*),dynlisttype_xmlELMNTCollectionp);
             newLineElementp->parent=globalCommandBufferOutp;
 
 
 
             stopDeltatimeForLine=glfwGetTime();
 
-            struct key_val_pair* line_key_valp=(struct key_val_pair*)malloc(sizeof(struct key_val_pair));
-            line_key_valp->key=stringToUTF32Dynlist("xycoord");
-            line_key_valp->value=TempFloatStringForXy;
-            append_DynamicList(&(newLineElementp->attributes),line_key_valp,sizeof(struct key_val_pair*),dynlisttype_keyValuePairsp);
+            struct key_val_pair line_key_val;
+            line_key_val.key=stringToUTF32Dynlist("xycoord");
+            line_key_val.value=TempFloatStringForXy;
+            append_DynamicList(&(newLineElementp->attributes),&line_key_val,sizeof(struct key_val_pair),dynlisttype_keyValuePairsp);
 
             break;
         case mapPoints_return_could_not_map:
@@ -644,12 +681,12 @@ int main(void){
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
     glfwWindowHint(GLFW_SAMPLES, 4);
     //window creation
-    //#define FULLSCREEN
+    #define FULLSCREEN
     #ifdef FULLSCREEN
     const GLFWvidmode* vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
     GLFWwindow* MainWindow = glfwCreateWindow(vidmode->width, vidmode->height, "Quantum Minigolf 2.0", glfwGetPrimaryMonitor(), NULL); //Fullscreen
     #else
-    GLFWwindow* MainWindow = glfwCreateWindow(1920, 1080, "Pa1nt debug", NULL, NULL);   //Windowed hd ready
+    GLFWwindow* MainWindow = glfwCreateWindow(2*1920, 2*1080, "Pa1nt debug", NULL, NULL);   //Windowed hd ready
 
     #endif // FULLSCREEN
 
@@ -747,6 +784,15 @@ int main(void){
         if(drawMode==drawModeReload){
             GlobalAppState.clear_drawingplane=1;
             drawMode=drawModeInactive;
+            //create <clear/>
+            struct xmlTreeElement* clearTag=(struct xmlTreeElement*)malloc(sizeof(struct xmlTreeElement));
+            clearTag->name=stringToUTF32Dynlist("clear");
+            clearTag->attributes=0;
+            clearTag->parent=globalCommandBufferOutp;
+            clearTag->content=0;
+            clearTag->type=xmltype_tag;
+            append_DynamicList(&globalCommandBufferOutp->content,&clearTag,sizeof(struct xmlTreeElement*),dynlisttype_xmlELMNTCollectionp);
+
             //create parent CommandBufferElement
             struct xmlTreeElement* XmlOuputElmntp=(struct xmlTreeElement*)malloc(sizeof(struct xmlTreeElement));
             XmlOuputElmntp->name=0;
@@ -757,6 +803,9 @@ int main(void){
             ((struct xmlTreeElement**)XmlOuputElmntp->content->items)[0]=globalCommandBufferOutp;
             globalCommandBufferOutp->parent=XmlOuputElmntp;
             writeXML(xmlFileCommandOutp,XmlOuputElmntp);
+            fclose(xmlFileCommandOutp);
+            dprintf(DBGT_INFO,"Writing out file finished");
+            exit(0);
         }else if(drawMode==drawModeInactive){
             processCommandXml(CommandInput,screenresx,screenresy);
         }

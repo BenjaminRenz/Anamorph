@@ -7,8 +7,7 @@
 struct xmlTreeElement;
 struct key_val_pair;
 
-enum {  dynlisttype_xmlfile,
-        dynlisttype_utf32chars,         //items of type uint32_t (utf32 characters not null terminated)
+enum {  dynlisttype_utf32chars,         //items of type uint32_t (utf32 characters not null terminated)
         dynlisttype_keyValuePairsp,      //items of type struct key_val_pait*
         dynlisttype_xmlELMNTCollectionp, //items of type struct xmlTreeElement*
 

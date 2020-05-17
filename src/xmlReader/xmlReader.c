@@ -118,7 +118,7 @@ int readXML(FILE* xmlFile,struct xmlTreeElement** returnDocumentRootpp){
     uint32_t* utf32Buffer=(uint32_t*) malloc(sizeof(uint32_t)*numOfCharsUTF8);     //potentially to big if we have utf8 characters that span over more than one byte
     uint32_t numOfCharsUTF32=utf8_to_utf32(utf8Buffer,numOfCharsUTF8,utf32Buffer); //up until this point we didn't know the actual number of utf32 chars because utf8 chars can combine
     free(utf8Buffer);
-    struct DynamicList* xmlFileDyn=create_DynamicList(sizeof(uint32_t),numOfCharsUTF32,dynlisttype_xmlfile);
+    struct DynamicList* xmlFileDyn=create_DynamicList(sizeof(uint32_t),numOfCharsUTF32,dynlisttype_utf32chars);
     memcpy(xmlFileDyn->items,utf32Buffer,sizeof(uint32_t)*numOfCharsUTF32);
     free(utf32Buffer);
     uint32_t offsetInXMLfile=0;
@@ -336,11 +336,11 @@ uint32_t parseAttributesAndMatchEndOfTag(struct DynamicList* xmlFileDyn,uint32_t
         printf("New Attribute found Val: ");
         printUTF32Dynlist(attValp);
 
-        struct key_val_pair* attKeyAndValp=(struct key_val_pair*) malloc(sizeof(struct key_val_pair));
-        attKeyAndValp->key=attKeyp;
-        attKeyAndValp->value=attValp;
+        struct key_val_pair attKeyAndVal;
+        attKeyAndVal.key=attKeyp;
+        attKeyAndVal.value=attValp;
 
-        append_DynamicList(&(ObjectToAttachResults->attributes),&attKeyAndValp,sizeof(struct key_val_pair*),dynlisttype_keyValuePairsp);
+        append_DynamicList(&(ObjectToAttachResults->attributes),&attKeyAndVal,sizeof(struct key_val_pair),dynlisttype_keyValuePairsp);
     }
     delete_DynList(mw_match_att1);  //Warning also deallocates items in mw_EndOfTag->items because they are copied over as reference to mw_match_att1
     free(mw_EndOfTag);
@@ -639,12 +639,14 @@ void match_element(struct DynamicList* xmlFileDyn,uint32_t* offsetInXMLfilep,str
                 struct xmlTreeElement* newElementp=(struct xmlTreeElement*)malloc(sizeof(struct xmlTreeElement));
                 newElementp->parent=MostRecentElement;
                 newElementp->name=create_DynamicList(sizeof(uint32_t),nameEndPosition-nameStartPosition,dynlisttype_utf32chars);
-                memcpy(newElementp->name->items,(((uint32_t*)xmlFileDyn->items)+nameStartPosition),sizeof(uint32_t)*(nameEndPosition-nameStartPosition));
+                memcpy(newElementp->name->items,(((uint32_t*)xmlFileDyn->items)+nameStartPosition),sizeof(uint32_t)*(nameEndPosition-nameStartPosition));   //works
                 newElementp->type=xmltype_tag;
                 newElementp->attributes=0;  //not determined yet
                 newElementp->content=0;     //not determined yet
                 append_DynamicList(&(MostRecentElement->content),&newElementp,sizeof(struct xmlTreeElement*),dynlisttype_xmlELMNTCollectionp);
+                MostRecentElement->content->type=dynlisttype_xmlELMNTCollectionp;
                 MostRecentElement=newElementp;
+
             }
             printf("Found New Opened Tag with Name: ");
             printUTF32Dynlist(MostRecentElement->name);
@@ -743,7 +745,7 @@ void match_element(struct DynamicList* xmlFileDyn,uint32_t* offsetInXMLfilep,str
 
 int match_xmldecl(struct DynamicList* xmlFileDyn,uint32_t* offsetInXMLfilep,struct xmlTreeElement* ObjectToAttachResults){
     uint32_t matchIndex;
-    if(xmlFileDyn->type!=dynlisttype_xmlfile){
+    if(xmlFileDyn->type!=dynlisttype_utf32chars){
         return internal_error_wrong_argument_type;
     }
     enum {match_res_xmldecl1_xmldecl=0,match_res_xmldecl1_nodecl=1};
@@ -792,12 +794,12 @@ int match_xmldecl(struct DynamicList* xmlFileDyn,uint32_t* offsetInXMLfilep,stru
         createCharMatchList(2,'0','9')
     );
     if(ObjectToAttachResults->attributes->itemcnt){
-        if(getOffsetUntil(((struct key_val_pair**)ObjectToAttachResults->attributes->items)[0]->key->items,7,w_match_xmldecl2,&matchIndex)){
+        if(getOffsetUntil(((struct key_val_pair*)ObjectToAttachResults->attributes->items)[0].key->items,7,w_match_xmldecl2,&matchIndex)){
             printf("ERROR: XMLdecl missing version key in attributs\n");
             exit(1);
         }
         delete_DynList(w_match_xmldecl2);
-        if(getOffsetUntil(((struct key_val_pair**)ObjectToAttachResults->attributes->items)[0]->value->items,7,w_match_xmldecl3,&matchIndex)){
+        if(getOffsetUntil(((struct key_val_pair*)ObjectToAttachResults->attributes->items)[0].value->items,7,w_match_xmldecl3,&matchIndex)){
             printf("ERROR: XMLdecl has illegal version value in attributes\n");
         }
         printf("TODO check last part of xmldecl version val\n");
@@ -811,7 +813,7 @@ int match_xmldecl(struct DynamicList* xmlFileDyn,uint32_t* offsetInXMLfilep,stru
 //Returns negative values for error, 0 for file has ended or something else found, and 1 for at least one misc matched
 int match_misc(struct DynamicList* xmlFileDyn,uint32_t* offsetInXMLfilep,struct xmlTreeElement* ObjectToAttachResults){
     uint32_t didMatchSomethingFLAG=0;
-    if(xmlFileDyn->type!=dynlisttype_xmlfile){
+    if(xmlFileDyn->type!=dynlisttype_utf32chars){
         return internal_error_wrong_argument_type;
     }
     do{
@@ -1008,11 +1010,11 @@ int writeXML(FILE* xmlOutFile,struct xmlTreeElement* inputDocumentRoot){
                 if(CurrentXMLTreeElement->attributes){      //check if element even has attributes
                     for(uint32_t attributenum=0; attributenum<CurrentXMLTreeElement->attributes->itemcnt; attributenum++){
                         printf("test");
-                        struct DynamicList* KeyDynlistp=(((struct key_val_pair**)CurrentXMLTreeElement->attributes->items)[attributenum])->key;     //Problematic segfault
-                        struct DynamicList* ValDynlistp=(((struct key_val_pair**)CurrentXMLTreeElement->attributes->items)[attributenum])->value;
+                        struct DynamicList* KeyDynlistp=(((struct key_val_pair*)CurrentXMLTreeElement->attributes->items)[attributenum]).key;     //Problematic segfault
+                        struct DynamicList* ValDynlistp=(((struct key_val_pair*)CurrentXMLTreeElement->attributes->items)[attributenum]).value;
                         //calculate space requirements
                         printf("key: %s\n",utf32dynlist_to_string(KeyDynlistp));
-                        printf("val: %s\n",utf32dynlist_to_string(KeyDynlistp));
+                        printf("val: %s\n",utf32dynlist_to_string(ValDynlistp));
                         requieredChars=1+KeyDynlistp->itemcnt+1+1+ValDynlistp->itemcnt+1;        //for key, 1x" ", 1x"=", 1x"\"", value, 1x"\""
                         //allocate storage
                         tempUTF32String=realloc(tempUTF32String,sizeof(uint32_t)*(numUTF32Chars+requieredChars));

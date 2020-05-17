@@ -16,10 +16,10 @@ struct key_val_pair{
 };
 
 enum {
-    xmltype_comment,//Comment
-    xmltype_pi,    //Processing instruction
-    xmltype_tag,   //subtag
-    xmltype_cdata, //or text
+    xmltype_comment=0x42,//Comment
+    xmltype_pi=0x43,    //Processing instruction
+    xmltype_tag=0x44,   //subtag
+    xmltype_cdata=0x45, //or text
 };
 
 
