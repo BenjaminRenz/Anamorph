@@ -340,7 +340,7 @@ uint32_t parseAttributesAndMatchEndOfTag(struct DynamicList* xmlFileDyn,uint32_t
         attKeyAndValp->key=attKeyp;
         attKeyAndValp->value=attValp;
 
-        ObjectToAttachResults->attributes=append_DynamicList(ObjectToAttachResults->attributes,&attKeyAndValp,sizeof(struct key_val_pair*),dynlisttype_keyValuePairsp);
+        append_DynamicList(&(ObjectToAttachResults->attributes),&attKeyAndValp,sizeof(struct key_val_pair*),dynlisttype_keyValuePairsp);
     }
     delete_DynList(mw_match_att1);  //Warning also deallocates items in mw_EndOfTag->items because they are copied over as reference to mw_match_att1
     free(mw_EndOfTag);
@@ -643,7 +643,7 @@ void match_element(struct DynamicList* xmlFileDyn,uint32_t* offsetInXMLfilep,str
                 newElementp->type=xmltype_tag;
                 newElementp->attributes=0;  //not determined yet
                 newElementp->content=0;     //not determined yet
-                MostRecentElement->content=append_DynamicList(MostRecentElement->content,&newElementp,sizeof(struct xmlTreeElement*),dynlisttype_xmlELMNTCollectionp);
+                append_DynamicList(&(MostRecentElement->content),&newElementp,sizeof(struct xmlTreeElement*),dynlisttype_xmlELMNTCollectionp);
                 MostRecentElement=newElementp;
             }
             printf("Found New Opened Tag with Name: ");
@@ -717,7 +717,7 @@ void match_element(struct DynamicList* xmlFileDyn,uint32_t* offsetInXMLfilep,str
             newCdataElement->attributes=0;
             newCdataElement->content=create_DynamicList(sizeof(uint32_t),cdataend-cdatastart,dynlisttype_utf32chars);
             memcpy(newCdataElement->content->items,(((uint32_t*)xmlFileDyn->items)+cdatastart),sizeof(uint32_t)*(cdataend-cdatastart));
-            MostRecentElement->content=append_DynamicList(MostRecentElement->content,&newCdataElement,sizeof(struct xmlFileDyn*),dynlisttype_xmlELMNTCollectionp);
+            append_DynamicList(&(MostRecentElement->content),&newCdataElement,sizeof(struct xmlFileDyn*),dynlisttype_xmlELMNTCollectionp);
 
             printf("Info: Found cdata: ");
             printUTF32Dynlist(newCdataElement->content);
@@ -884,7 +884,7 @@ int match_misc(struct DynamicList* xmlFileDyn,uint32_t* offsetInXMLfilep,struct 
             commentElement->parent=ObjectToAttachResults;
             commentElement->content=commentText;
 
-            ObjectToAttachResults->content=append_DynamicList(ObjectToAttachResults->content,&commentElement,sizeof(struct DynamicList*),dynlisttype_xmlELMNTCollectionp);
+            append_DynamicList(&(ObjectToAttachResults->content),&commentElement,sizeof(struct DynamicList*),dynlisttype_xmlELMNTCollectionp);
 
         }else if(matchIndex==match_res_misc1_pi){
             didMatchSomethingFLAG=1;
@@ -941,7 +941,7 @@ int match_misc(struct DynamicList* xmlFileDyn,uint32_t* offsetInXMLfilep,struct 
             PIElement->parent=ObjectToAttachResults;
             PIElement->content=0;
             PIElement->attributes=0;
-            ObjectToAttachResults->content=append_DynamicList(ObjectToAttachResults->content,&PIElement,sizeof(struct DynamicList*),dynlisttype_xmlELMNTCollectionp);
+            append_DynamicList(&(ObjectToAttachResults->content),&PIElement,sizeof(struct DynamicList*),dynlisttype_xmlELMNTCollectionp);
 
 
             if(matchIndex==match_res_pi2_whitespace){ //we have some text following

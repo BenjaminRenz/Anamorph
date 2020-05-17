@@ -39,10 +39,17 @@ because otherwise the intermediate object's pointers will be invalid when you fr
 
 //type id is only requiered if the list has not been created yet
 //only compatible with pointer type lists!!!!!!
-struct DynamicList* append_DynamicList(struct DynamicList* ListOrNullPtr,void* newElementp,size_t sizeofListElements,uint32_t typeId){      //Destroys old pointer and returns new pointer, user needs to update all pointers referring to this object
+
+
+void append_DynamicList(struct DynamicList** ListOrNullpp,void* newElementp,size_t sizeofListElements,uint32_t typeId){      //Destroys old pointer and returns new pointer, user needs to update all pointers referring to this object
+    if(!ListOrNullpp){
+        dprintf(DBGT_ERROR,"argument cant be nullptr");
+        exit(-1);
+    }
+    struct DynamicList* oldDynList=(*ListOrNullpp);
     struct DynamicList* newDynList;
-    if(ListOrNullPtr){//Does already exist, so increase storage space
-        newDynList=realloc(ListOrNullPtr,sizeof(struct DynamicList)+sizeofListElements*(1+ListOrNullPtr->itemcnt));
+    if(oldDynList){//Does already exist, so increase storage space
+        newDynList=realloc(oldDynList,sizeof(struct DynamicList)+sizeofListElements*(1+oldDynList->itemcnt));
         newDynList->itemcnt++;
     }else{
         newDynList=(struct DynamicList*)malloc(sizeof(struct DynamicList)+sizeofListElements);
@@ -51,10 +58,12 @@ struct DynamicList* append_DynamicList(struct DynamicList* ListOrNullPtr,void* n
     }
     //Fix dangling pointers
     newDynList->items=(&(newDynList[1]));
+    //copy new element in list
     void** lastElementInListp=(void**)((char*)newDynList->items+(sizeofListElements*(newDynList->itemcnt-1)));
     memcpy(lastElementInListp,newElementp,sizeofListElements);
     //(*lastElementInListp)=newElementp;
-    return newDynList;
+    *ListOrNullpp=newDynList;
+    return;
 }
 
 struct DynamicList* create_DynamicList(size_t sizeofListElements,uint32_t NumOfNewElements,uint32_t typeId){
@@ -357,7 +366,7 @@ struct DynamicList* getSubelementsWithCharacteristic(uint32_t (*checkfkt)(struct
         if(CurrentXMLTreeElement->parent==LastXMLTreeElement){      //walk deeper
             for(;index<itemcnt;index++){
                 if((*checkfkt)(((struct xmlTreeElement**)CurrentXMLTreeElement->content->items)[index])){
-                    returnDynList=append_DynamicList(returnDynList,(void**)&(((struct xmlTreeElement**)CurrentXMLTreeElement->content->items)[index]),sizeof(struct xmlTreeElement*),dynlisttype_xmlELMNTCollectionp);
+                    append_DynamicList(&returnDynList,(void**)&(((struct xmlTreeElement**)CurrentXMLTreeElement->content->items)[index]),sizeof(struct xmlTreeElement*),dynlisttype_xmlELMNTCollectionp);
                 }
                 if(currentDepth<maxDepth){ //make sure our programm stops scanning for new elements if the maxdepth is reached
                     if(((struct xmlTreeElement**)CurrentXMLTreeElement->content->items)[index]->type==xmltype_tag){  //One valid subelement found
@@ -449,7 +458,7 @@ struct DynamicList* getElementsWithCharacteristic(uint32_t (*checkfkt)(struct xm
                 dprintf(DBGT_ERROR,"%d,%d",CurrentXMLTreeElement->content->type,dynlisttype_xmlELMNTCollectionp);
                 dprintf(DBGT_INFO,"%p",(void*)(((struct xmlTreeElement**)CurrentXMLTreeElement->content->items)[0]));
                 if((*checkfkt)(((struct xmlTreeElement**)CurrentXMLTreeElement->content->items)[index])){
-                    returnDynList=append_DynamicList(returnDynList,(void**)&(((struct xmlTreeElement**)CurrentXMLTreeElement->content->items)[index]),sizeof(struct xmlTreeElement*),dynlisttype_xmlELMNTCollectionp);
+                    append_DynamicList(&returnDynList,(void**)&(((struct xmlTreeElement**)CurrentXMLTreeElement->content->items)[index]),sizeof(struct xmlTreeElement*),dynlisttype_xmlELMNTCollectionp);
                 }
                 if(((struct xmlTreeElement**)CurrentXMLTreeElement->content->items)[index]->type==xmltype_tag){  //One valid subelement found
                     LastXMLTreeElement=CurrentXMLTreeElement;
@@ -545,7 +554,7 @@ struct DynamicList* utf32dynlist_to_ints(struct DynamicList* NumberSeperatorp,st
                 if(flagreg&flag_minus_mantis){
                     mantisVal*=(-1);
                 }
-                returnDynlistp=append_DynamicList(returnDynlistp,&mantisVal,sizeof(double),ListType_double);
+                append_DynamicList(&returnDynlistp,&mantisVal,sizeof(double),ListType_double);
                 flagreg=0;
                 mantisVal=0;
             }
@@ -561,7 +570,7 @@ struct DynamicList* utf32dynlist_to_ints(struct DynamicList* NumberSeperatorp,st
         if(flagreg&flag_minus_mantis){
             mantisVal*=(-1);
         }
-        returnDynlistp=append_DynamicList(returnDynlistp,&mantisVal,sizeof(double),ListType_double);
+        append_DynamicList(&returnDynlistp,&mantisVal,sizeof(double),ListType_double);
     }
     delete_DynList(nummatch);
     return returnDynlistp;
@@ -644,7 +653,7 @@ struct DynamicList* utf32dynlist_to_doubles(struct DynamicList* NumberSeperatorp
                 }
                 exponVal-=NumOfDecplcDig;
                 mantisVal*=pow(10,exponVal);
-                returnDynlistp=append_DynamicList(returnDynlistp,&mantisVal,sizeof(double),ListType_double);
+                append_DynamicList(&returnDynlistp,&mantisVal,sizeof(double),ListType_double);
                 flagreg=0;
                 NumOfDecplcDig=0;
                 mantisVal=0;
@@ -719,7 +728,7 @@ struct DynamicList* utf32dynlist_to_doubles(struct DynamicList* NumberSeperatorp
         }
         exponVal-=NumOfDecplcDig;
         mantisVal*=pow(10,exponVal);
-        returnDynlistp=append_DynamicList(returnDynlistp,&mantisVal,sizeof(double),ListType_double);
+        append_DynamicList(&returnDynlistp,&mantisVal,sizeof(double),ListType_double);
     }
     delete_DynList(nummatch);       //TODO fix for all return types
     return returnDynlistp;
@@ -802,7 +811,7 @@ struct DynamicList* utf32dynlist_to_floats(struct DynamicList* NumberSeperatorp,
                 }
                 exponVal-=NumOfDecplcDig;
                 mantisVal*=pow(10,exponVal);
-                returnDynlistp=append_DynamicList(returnDynlistp,&mantisVal,sizeof(float),ListType_float);
+                append_DynamicList(&returnDynlistp,&mantisVal,sizeof(float),ListType_float);
                 flagreg=0;
                 NumOfDecplcDig=0;
                 mantisVal=0;
@@ -877,7 +886,7 @@ struct DynamicList* utf32dynlist_to_floats(struct DynamicList* NumberSeperatorp,
         }
         exponVal-=NumOfDecplcDig;
         mantisVal*=pow(10,exponVal);
-        returnDynlistp=append_DynamicList(returnDynlistp,&mantisVal,sizeof(float),ListType_float);
+        append_DynamicList(&returnDynlistp,&mantisVal,sizeof(float),ListType_float);
     }
     delete_DynList(nummatch);       //TODO fix for all return types
     return returnDynlistp;

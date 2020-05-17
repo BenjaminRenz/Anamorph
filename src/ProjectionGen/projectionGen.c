@@ -127,6 +127,7 @@ void smooth_hsv2rgb(uint8_t* r,uint8_t* g, uint8_t* b,float h_in_rad,float sat,f
     return;
 }
 
+
 uint8_t mapPoints(int32_t* mapped_xpos, int32_t* mapped_ypos, int32_t touch_xpos, int32_t touch_ypos,uint32_t screenresx, uint32_t screenresy,uint32_t widthMM, uint32_t heightMM){
     if(GlobalAppState.switch_cone_cyl==switch_cone_cyl_is_cone){
         dprintf(DBGT_INFO,"%d,%d",touch_xpos,touch_ypos);
@@ -150,16 +151,16 @@ uint8_t mapPoints(int32_t* mapped_xpos, int32_t* mapped_ypos, int32_t touch_xpos
             dprintf(DBGT_INFO,"mini,%f",mulfac);
             *mapped_xpos=(int32_t)(mini_proj_pix_x/scale_cone*mulfac+screenresx/2);
             *mapped_ypos=(int32_t)(mini_proj_pix_y/scale_cone*mulfac+screenresy/2);
-            return 1;   //we generated a mapped point
+            return mapPoints_return_from_o;   //we generated a mapped point
         }else if(r_cone*px_per_mm*r_cone*px_per_mm<large_proj_radq && large_proj_radq<outerCone_rad*outerCone_rad){
             //Pixel is in the large map representation
             float mulfac=cone_project_s2o(sqrtf(large_proj_radq)*mm_per_px);
             dprintf(DBGT_INFO,"larg,%f",mulfac);
             *mapped_xpos=(int32_t)(large_proj_pix_x*scale_cone*mulfac+mini_proj_size_center_x);
             *mapped_ypos=(int32_t)(large_proj_pix_y*scale_cone*mulfac+mini_proj_size_center_y);
-            return 1;   //we generated a mapped point
+            return mapPoints_return_from_s;   //we generated a mapped point
         }
-        return 0;   //Do not draw a mapping point
+        return mapPoints_return_could_not_map;   //Do not draw a mapping point
     }else if(GlobalAppState.switch_cone_cyl==switch_cone_cyl_is_cyl){
         int32_t mini_proj_size_lb_x=(uint32_t)floor(lb_cylrep_x*px_per_mm);
         int32_t mini_proj_size_lb_y=(uint32_t)floor(lb_cylrep_y*px_per_mm);
@@ -191,7 +192,7 @@ uint8_t mapPoints(int32_t* mapped_xpos, int32_t* mapped_ypos, int32_t touch_xpos
             *mapped_xpos=(int32_t)floor(screenresx/2+px_per_mm*tempx);
             *mapped_ypos=(int32_t)floor(screenresy/2+px_per_mm*tempy);
             dprintf(DBGT_INFO,"COULDMAP O2S to %d,%d",*mapped_xpos,*mapped_ypos);
-            return 1;
+            return mapPoints_return_from_o;
         }
 
         float tempx_mm=mm_per_px*large_proj_pix_x;
@@ -202,12 +203,12 @@ uint8_t mapPoints(int32_t* mapped_xpos, int32_t* mapped_ypos, int32_t touch_xpos
             float tempy_px=scale_cyl*px_per_mm*tempy_mm;
             *mapped_xpos=(int32_t)floor(tempx_px+px_per_mm*(half_x_width*scale_cyl+lb_cylrep_x));    //TODO scale_cyl
             *mapped_ypos=(int32_t)floor(tempy_px+px_per_mm*(lb_cylrep_y-height_y_negat*scale_cyl)); //TODO subtract offset from center of minigrid
-            return 1;
+            return mapPoints_return_from_s;
         }
-        return 0;   //Do not map point
+        return mapPoints_return_could_not_map;   //Do not map point
     }
     dprintf(DBGT_ERROR,"Neither cyl nor cone mapping active");
-    return 0;
+    exit(1);
 }
 
 

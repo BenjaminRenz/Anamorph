@@ -28,7 +28,7 @@ int readXML(FILE* xmlFile,struct xmlTreeElement** returnDocumentRoot);
 int writeXML(FILE* xmlOutFile,struct xmlTreeElement* inputDocumentRoot);
 
 void delete_DynList(struct DynamicList* DynListPtr);
-struct DynamicList* append_DynamicList(struct DynamicList* ListOrNullPtr,void* newElement,size_t sizeofListElements,uint32_t typeId);
+void append_DynamicList(struct DynamicList** ListOrNullPtr,void* newElement,size_t sizeofListElements,uint32_t typeId);
 uint32_t compareEqualDynamicUTF32List(struct DynamicList* List1UTF32,struct DynamicList* List2UTF32);
 struct DynamicList* stringToUTF32Dynlist(char* inputString);
 

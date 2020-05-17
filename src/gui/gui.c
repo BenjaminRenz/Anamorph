@@ -224,7 +224,7 @@ struct DynamicList* genVTXforScene(struct xmlTreeElement* scene, int screenresx,
             tempCollider.collider_z=((float*)(zfloatDLp->items))[0];
             if(tempCollider.onClickFPid!=FP_CallbackNotSet||tempCollider.onHoldFPid!=FP_CallbackNotSet||tempCollider.onReleaseFPid!=FP_CallbackNotSet){
                 //Do only append collider if it has at least one function attached to it
-                ColliderDLp=append_DynamicList(ColliderDLp,&tempCollider,sizeof(struct Collider),ListType_Collider);
+                append_DynamicList(&ColliderDLp,&tempCollider,sizeof(struct Collider),ListType_Collider);
             }
             //map xy to glcoords (-1,1)
             dprintf(DBGT_INFO,"BBox1 %f,%f, %f,%f",BoxLowerLeftX,BoxLowerLeftY,BoxUpperRightX,BoxUpperRightY);
@@ -257,46 +257,46 @@ struct DynamicList* genVTXforScene(struct xmlTreeElement* scene, int screenresx,
             //Build triangles
             {
                 //Vertex1_lowleft
-                vertAndUvsDLp=append_DynamicList(vertAndUvsDLp,&BoxLowerLeftX,sizeof(float),ListType_float);
-                vertAndUvsDLp=append_DynamicList(vertAndUvsDLp,&BoxLowerLeftY,sizeof(float),ListType_float);
-                vertAndUvsDLp=append_DynamicList(vertAndUvsDLp,(float*)zfloatDLp->items,sizeof(float),ListType_float);
-                vertAndUvsDLp=append_DynamicList(vertAndUvsDLp,&uv_ll_x,sizeof(float),ListType_float);
-                vertAndUvsDLp=append_DynamicList(vertAndUvsDLp,&uv_ll_y,sizeof(float),ListType_float);
+                append_DynamicList(&vertAndUvsDLp,&BoxLowerLeftX,sizeof(float),ListType_float);
+                append_DynamicList(&vertAndUvsDLp,&BoxLowerLeftY,sizeof(float),ListType_float);
+                append_DynamicList(&vertAndUvsDLp,(float*)zfloatDLp->items,sizeof(float),ListType_float);
+                append_DynamicList(&vertAndUvsDLp,&uv_ll_x,sizeof(float),ListType_float);
+                append_DynamicList(&vertAndUvsDLp,&uv_ll_y,sizeof(float),ListType_float);
 
                 //Vertex2_lowright
-                vertAndUvsDLp=append_DynamicList(vertAndUvsDLp,&BoxUpperRightX,sizeof(float),ListType_float);
-                vertAndUvsDLp=append_DynamicList(vertAndUvsDLp,&BoxLowerLeftY,sizeof(float),ListType_float);
-                vertAndUvsDLp=append_DynamicList(vertAndUvsDLp,(float*)zfloatDLp->items,sizeof(float),ListType_float);
-                vertAndUvsDLp=append_DynamicList(vertAndUvsDLp,&uv_ur_x,sizeof(float),ListType_float);
-                vertAndUvsDLp=append_DynamicList(vertAndUvsDLp,&uv_ll_y,sizeof(float),ListType_float);
+                append_DynamicList(&vertAndUvsDLp,&BoxUpperRightX,sizeof(float),ListType_float);
+                append_DynamicList(&vertAndUvsDLp,&BoxLowerLeftY,sizeof(float),ListType_float);
+                append_DynamicList(&vertAndUvsDLp,(float*)zfloatDLp->items,sizeof(float),ListType_float);
+                append_DynamicList(&vertAndUvsDLp,&uv_ur_x,sizeof(float),ListType_float);
+                append_DynamicList(&vertAndUvsDLp,&uv_ll_y,sizeof(float),ListType_float);
 
                 //Vertex3_upleft
-                vertAndUvsDLp=append_DynamicList(vertAndUvsDLp,&BoxLowerLeftX,sizeof(float),ListType_float);
-                vertAndUvsDLp=append_DynamicList(vertAndUvsDLp,&BoxUpperRightY,sizeof(float),ListType_float);
-                vertAndUvsDLp=append_DynamicList(vertAndUvsDLp,(float*)zfloatDLp->items,sizeof(float),ListType_float);
-                vertAndUvsDLp=append_DynamicList(vertAndUvsDLp,&uv_ll_x,sizeof(float),ListType_float);
-                vertAndUvsDLp=append_DynamicList(vertAndUvsDLp,&uv_ur_y,sizeof(float),ListType_float);
+                append_DynamicList(&vertAndUvsDLp,&BoxLowerLeftX,sizeof(float),ListType_float);
+                append_DynamicList(&vertAndUvsDLp,&BoxUpperRightY,sizeof(float),ListType_float);
+                append_DynamicList(&vertAndUvsDLp,(float*)zfloatDLp->items,sizeof(float),ListType_float);
+                append_DynamicList(&vertAndUvsDLp,&uv_ll_x,sizeof(float),ListType_float);
+                append_DynamicList(&vertAndUvsDLp,&uv_ur_y,sizeof(float),ListType_float);
 
                 //Vertex2_lowright
-                vertAndUvsDLp=append_DynamicList(vertAndUvsDLp,&BoxUpperRightX,sizeof(float),ListType_float);
-                vertAndUvsDLp=append_DynamicList(vertAndUvsDLp,&BoxLowerLeftY,sizeof(float),ListType_float);
-                vertAndUvsDLp=append_DynamicList(vertAndUvsDLp,(float*)zfloatDLp->items,sizeof(float),ListType_float);
-                vertAndUvsDLp=append_DynamicList(vertAndUvsDLp,&uv_ur_x,sizeof(float),ListType_float);
-                vertAndUvsDLp=append_DynamicList(vertAndUvsDLp,&uv_ll_y,sizeof(float),ListType_float);
+                append_DynamicList(&vertAndUvsDLp,&BoxUpperRightX,sizeof(float),ListType_float);
+                append_DynamicList(&vertAndUvsDLp,&BoxLowerLeftY,sizeof(float),ListType_float);
+                append_DynamicList(&vertAndUvsDLp,(float*)zfloatDLp->items,sizeof(float),ListType_float);
+                append_DynamicList(&vertAndUvsDLp,&uv_ur_x,sizeof(float),ListType_float);
+                append_DynamicList(&vertAndUvsDLp,&uv_ll_y,sizeof(float),ListType_float);
 
                 //Vertex4_upright
-                vertAndUvsDLp=append_DynamicList(vertAndUvsDLp,&BoxUpperRightX,sizeof(float),ListType_float);
-                vertAndUvsDLp=append_DynamicList(vertAndUvsDLp,&BoxUpperRightY,sizeof(float),ListType_float);
-                vertAndUvsDLp=append_DynamicList(vertAndUvsDLp,(float*)zfloatDLp->items,sizeof(float),ListType_float);
-                vertAndUvsDLp=append_DynamicList(vertAndUvsDLp,&uv_ur_x,sizeof(float),ListType_float);
-                vertAndUvsDLp=append_DynamicList(vertAndUvsDLp,&uv_ur_y,sizeof(float),ListType_float);
+                append_DynamicList(&vertAndUvsDLp,&BoxUpperRightX,sizeof(float),ListType_float);
+                append_DynamicList(&vertAndUvsDLp,&BoxUpperRightY,sizeof(float),ListType_float);
+                append_DynamicList(&vertAndUvsDLp,(float*)zfloatDLp->items,sizeof(float),ListType_float);
+                append_DynamicList(&vertAndUvsDLp,&uv_ur_x,sizeof(float),ListType_float);
+                append_DynamicList(&vertAndUvsDLp,&uv_ur_y,sizeof(float),ListType_float);
 
                 //Vertex3_upleft
-                vertAndUvsDLp=append_DynamicList(vertAndUvsDLp,&BoxLowerLeftX,sizeof(float),ListType_float);
-                vertAndUvsDLp=append_DynamicList(vertAndUvsDLp,&BoxUpperRightY,sizeof(float),ListType_float);
-                vertAndUvsDLp=append_DynamicList(vertAndUvsDLp,(float*)zfloatDLp->items,sizeof(float),ListType_float);
-                vertAndUvsDLp=append_DynamicList(vertAndUvsDLp,&uv_ll_x,sizeof(float),ListType_float);
-                vertAndUvsDLp=append_DynamicList(vertAndUvsDLp,&uv_ur_y,sizeof(float),ListType_float);
+                append_DynamicList(&vertAndUvsDLp,&BoxLowerLeftX,sizeof(float),ListType_float);
+                append_DynamicList(&vertAndUvsDLp,&BoxUpperRightY,sizeof(float),ListType_float);
+                append_DynamicList(&vertAndUvsDLp,(float*)zfloatDLp->items,sizeof(float),ListType_float);
+                append_DynamicList(&vertAndUvsDLp,&uv_ll_x,sizeof(float),ListType_float);
+                append_DynamicList(&vertAndUvsDLp,&uv_ur_y,sizeof(float),ListType_float);
 
             }
             delete_DynList(zfloatDLp);
@@ -324,7 +324,7 @@ struct DynamicList* genVTXforScene(struct xmlTreeElement* scene, int screenresx,
         tmpLayerColl.xyzuvDLp=vertAndUvsDLp;
         tmpLayerColl.id=((int*)(layeridDLp->items))[0];
         tmpLayerColl.active=((int*)(layer_active_int->items))[0];
-        AllLayersReturnDLp=append_DynamicList(AllLayersReturnDLp,&tmpLayerColl,sizeof(struct LayerCollection),ListType_LayerCollection);
+        append_DynamicList(&AllLayersReturnDLp,&tmpLayerColl,sizeof(struct LayerCollection),ListType_LayerCollection);
     }
     dprintf(DBGT_INFO,"Finished creation of vtx");
     return AllLayersReturnDLp;

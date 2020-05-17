@@ -4,24 +4,24 @@
 #include "debug/debug.h"
 
 int (*functionpointerarray[])(struct DynamicList* AllLayersInfop,float x_perc, float y_perc)={
-    &close_Menus,  //GuiFunction 0
-    &open_Color_Menu,  //GuiFunction 1
-    &set_color_blue,  //GuiFunction 2
-    &set_color_green,  //GuiFunction 3
-    &set_color_red,  //GuiFunction 4
-    &set_color_black,  //GuiFunction 5
-    &open_Penrad_Menu,  //GuiFunction 6
-    &penrad_big,  //GuiFunction 7
-    &penrad_med,  //GuiFunction 8
-    &penrad_small,  //GuiFunction 9
-    &clear_drawingplane,  //GuiFunction 10
-    &open_MObject_Menu,  //GuiFunction 11
-    &set_cylinder,  //GuiFunction 12
-    &set_cone,  //GuiFunction 13
-    &open_Grid_Menu,  //GuiFunction 14
-    &set_grid_pic,   //GuiFunction 15
-    &set_grid_color,  //GuiFunction 16
-    &set_grid_white   //GuiFunction 17
+    &close_Menus,           //GuiFunction 0
+    &open_Color_Menu,       //GuiFunction 1
+    &set_color_blue,        //GuiFunction 2
+    &set_color_green,       //GuiFunction 3
+    &set_color_red,         //GuiFunction 4
+    &set_color_black,       //GuiFunction 5
+    &open_Penrad_Menu,      //GuiFunction 6
+    &penrad_big,            //GuiFunction 7
+    &penrad_med,            //GuiFunction 8
+    &penrad_small,          //GuiFunction 9
+    &clear_drawingplane,    //GuiFunction 10
+    &open_MObject_Menu,     //GuiFunction 11
+    &set_cylinder,          //GuiFunction 12
+    &set_cone,              //GuiFunction 13
+    &open_Grid_Menu,        //GuiFunction 14
+    &set_grid_pic,          //GuiFunction 15
+    &set_grid_color,        //GuiFunction 16
+    &set_grid_white         //GuiFunction 17
 };
 
 int fparrayLength(void){

@@ -1,6 +1,6 @@
 <commands>
 	<delay ms="1000"/>
-	<line ms="5000" xycoord="-0.5 -0.85 -0.5 0.5"/>
+	<line ms="5000" xycoord="-0.5 -0.85 -0.5 0.5 "/>
 	<line ms="5000" xycoord="-0.5 0.5 0.5 0.5"/>
 	<line ms="5000" xycoord="0.5 0.5 0.5 -0.85"/>
 	<delay ms="1000"/>

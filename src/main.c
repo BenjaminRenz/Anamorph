@@ -18,6 +18,19 @@
 #include "glfw3/glfw3.h"
 #include "glUtils/gl_utils.h"
 
+//Position of the minigrid's center in mm
+#define r_cone  57.0f
+#define h_cone  80.0f
+
+//Internal Conversions
+#define mm_per_px_256 (widthMM/(screenresx*256.0f))
+#define px_256_per_mm ((screenresx*256.0f)/widthMM)
+#define mm_per_px (widthMM/(float)screenresx)
+#define px_per_mm (screenresx/(float)widthMM)
+
+#define outerCone_rad_mm (h_cone*tanf(2*atanf(r_cone/h_cone)))     //MaxRadius of our screen projection of the cone
+
+
 /*Note on texture unit and textures,
 opengl features texture units which can have multiple textures bound to them
 because shaders can only switch texture units an not textures directely a seperate texture unit is used for the background plane, the drawing plane and the ui
@@ -99,9 +112,145 @@ struct GObject* Canvasp;
 uint32_t draw_enabled=0;
 int widthMM=0;
 int heightMM=0;
+enum{drawModeActive,drawModeReload,drawModeInactive};
+int drawMode=drawModeInactive;
+struct xmlTreeElement* globalCommandBufferOutp=0;
+double stopDeltatimeForLine=0.0;
 
+void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods){
+    if(key==GLFW_KEY_SPACE&&action==GLFW_RELEASE){
+        switch(drawMode){
+        case drawModeActive:
+            drawMode=drawModeReload;
+            break;
+        case drawModeInactive:
+            globalCommandBufferOutp=(struct xmlTreeElement*)malloc(sizeof(struct xmlTreeElement));
+            globalCommandBufferOutp->name=stringToUTF32Dynlist("commands");
+            globalCommandBufferOutp->content=0;
+            globalCommandBufferOutp->attributes=0;
+            globalCommandBufferOutp->type=xmltype_tag;
+            globalCommandBufferOutp->parent=0;
+            drawMode=drawModeActive;
+            GlobalAppState.clear_drawingplane=1;
+            break;
+        }
+    }
+}
 
 void MouseButtonCallback(GLFWwindow* GLFW_window,int button, int action, int mods){
+    if(button==GLFW_MOUSE_BUTTON_LEFT&&action==GLFW_PRESS){
+        if(!draw_enabled){  //if this is the first point
+            dprintf(DBGT_INFO,"first point");
+            double xtouchpos=0.0;
+            double ytouchpos=0.0;
+            glfwGetCursorPos(GLFW_window,&xtouchpos,&ytouchpos);
+            int xpos=(int32_t)xtouchpos;
+            int ypos=(int32_t)ytouchpos;
+            int screenresy=0;
+            int screenresx=0;
+            glfwGetWindowSize(GLFW_window,&screenresx,&screenresy);     //TODO make this global?
+            int32_t mapped_x_pos=0;
+            int32_t mapped_y_pos=0;
+            switch(mapPoints(&mapped_x_pos,&mapped_y_pos,xpos,screenresy-ypos,screenresx,screenresy,widthMM,heightMM)){
+            case mapPoints_return_from_o:
+                xpos=mapped_x_pos;
+                ypos=mapped_y_pos;
+                //intended fallthrough, no break
+            case mapPoints_return_from_s: ; //empty command to avoid "a label can only be part of a statement"
+                //create new line xml element
+                struct xmlTreeElement* newLineElementp=(struct xmlTreeElement*)malloc(sizeof(struct xmlTreeElement));
+                newLineElementp->name=stringToUTF32Dynlist("line");
+                newLineElementp->content=0;
+                newLineElementp->attributes=0;
+                newLineElementp->type=xmltype_tag;
+                //append to our global command buffer for later output
+                append_DynamicList(&(globalCommandBufferOutp->content),newLineElementp,sizeof(struct xmlTreeElement**),dynlisttype_xmlELMNTCollectionp);
+                newLineElementp->parent=globalCommandBufferOutp;
+
+                xtouchpos=((double)xpos-screenresx/2)*mm_per_px/outerCone_rad_mm;
+                ytouchpos=((double)ypos-screenresy/2)*mm_per_px/outerCone_rad_mm;
+                uint32_t requieredCharsForXy=snprintf(NULL,0,"%lf %lf ",xtouchpos,ytouchpos)-1;
+                struct DynamicList* TempFloatString=create_DynamicList(sizeof(uint32_t),requieredCharsForXy,dynlisttype_utf32chars);
+                uint8_t* tempASCIIStringp=(uint8_t*)malloc((requieredCharsForXy+1)*sizeof(uint8_t));
+                snprintf((char*)tempASCIIStringp,requieredCharsForXy+1,"%lf %lf ",xtouchpos,ytouchpos);
+                utf8_to_utf32(tempASCIIStringp,requieredCharsForXy,TempFloatString->items);
+                free(tempASCIIStringp);
+
+                stopDeltatimeForLine=glfwGetTime();
+
+                struct key_val_pair* line_key_valp=(struct key_val_pair*)malloc(sizeof(struct key_val_pair));
+                line_key_valp->key=stringToUTF32Dynlist("xycoord");
+                line_key_valp->value=TempFloatString;
+                append_DynamicList(&(newLineElementp->attributes),line_key_valp,sizeof(struct key_val_pair*),dynlisttype_keyValuePairsp);
+                break;
+            case mapPoints_return_could_not_map:
+                exit(-1);
+                break;
+            }
+            draw_enabled=1;
+        }
+    }else if(button==GLFW_MOUSE_BUTTON_LEFT&&action==GLFW_RELEASE){
+        if(draw_enabled&&drawMode==drawModeActive){     //set last point in line
+            dprintf(DBGT_INFO,"last point");
+            double xtouchpos=0.0;
+            double ytouchpos=0.0;
+            glfwGetCursorPos(GLFW_window,&xtouchpos,&ytouchpos);
+            int xpos=(int32_t)xtouchpos;
+            int ypos=(int32_t)ytouchpos;
+            int screenresy=0;
+            int screenresx=0;
+            glfwGetWindowSize(GLFW_window,&screenresx,&screenresy);     //TODO make this global?
+            int32_t mapped_x_pos=0;
+            int32_t mapped_y_pos=0;
+            switch(mapPoints(&mapped_x_pos,&mapped_y_pos,xpos,screenresy-ypos,screenresx,screenresy,widthMM,heightMM)){
+            case mapPoints_return_from_o:
+                xpos=mapped_x_pos;
+                ypos=mapped_y_pos;
+                //intended fallthrough, no break
+            case mapPoints_return_from_s:
+                //transform touch position and mapped point into 1,1 coordinate system
+                xtouchpos=((double)xpos-screenresx/2)*mm_per_px/outerCone_rad_mm;
+                ytouchpos=((double)ypos-screenresy/2)*mm_per_px/outerCone_rad_mm;
+                uint32_t requieredCharsForXy=snprintf(NULL,0,"%lf %lf ",xtouchpos,ytouchpos)-1;
+                struct DynamicList* TempFloatStringForXy=create_DynamicList(sizeof(uint32_t),requieredCharsForXy,dynlisttype_utf32chars);
+                uint8_t* tempASCIIStringp=(uint8_t*)malloc((requieredCharsForXy+1)*sizeof(uint8_t));
+                snprintf((char*)tempASCIIStringp,requieredCharsForXy+1,"%lf %lf ",xtouchpos,ytouchpos);
+                utf8_to_utf32(tempASCIIStringp,requieredCharsForXy,TempFloatStringForXy->items);
+                free(tempASCIIStringp);
+
+                //close old line tag
+
+                //find out deltat
+                double deltat=(glfwGetTime()-stopDeltatimeForLine);
+                struct key_val_pair* line_ms_key_valp=(struct key_val_pair*)malloc(sizeof(struct key_val_pair));
+                line_ms_key_valp->key=stringToUTF32Dynlist("ms");
+                uint32_t requieredCharsForMs=snprintf(NULL,0,"%lf",deltat)-1;
+                struct DynamicList* TempFloatStringForMs=create_DynamicList(sizeof(uint32_t),requieredCharsForMs,dynlisttype_utf32chars);
+                tempASCIIStringp=(uint8_t*)malloc((requieredCharsForMs+1)*sizeof(uint8_t));
+                snprintf((char*)tempASCIIStringp,requieredCharsForMs+1,"%lf",deltat);
+                utf8_to_utf32(tempASCIIStringp,requieredCharsForMs,TempFloatStringForMs->items);
+                free(tempASCIIStringp);
+                line_ms_key_valp->value=TempFloatStringForMs;
+
+                //append x2 and y2 to last line element
+                uint32_t index_of_last_line_elmnt=(globalCommandBufferOutp->content->itemcnt-1);
+                struct xmlTreeElement* lastLineElementp=((struct xmlTreeElement**)globalCommandBufferOutp->content->items)[index_of_last_line_elmnt];
+                //create the requiered space for the full set of x1 y1 x2 y2 coordinates
+                struct key_val_pair* oldLineOldKeyValp=((struct key_val_pair**)lastLineElementp->attributes->items)[0];        //xycoord should be the first element
+                struct DynamicList* oldLineNewStringp=create_DynamicList(sizeof(uint32_t),oldLineOldKeyValp->value->itemcnt+requieredCharsForXy,dynlisttype_utf32chars);
+                memcpy(oldLineNewStringp->items,oldLineOldKeyValp->value->items,sizeof(uint32_t)*(oldLineOldKeyValp->value->itemcnt));          //copy over previous string x1 y1
+                memcpy(oldLineNewStringp->items+oldLineOldKeyValp->value->itemcnt,TempFloatStringForXy->items,sizeof(uint32_t)*(requieredCharsForXy));  //copy new string x2 y2
+                delete_DynList(oldLineOldKeyValp->value);    //delete old string
+                oldLineOldKeyValp->value=oldLineNewStringp;  //update reference from value
+
+                break;
+            case mapPoints_return_could_not_map:
+                break;
+            }
+            draw_enabled=0;
+        }
+    }
+    /*
     double xpos=0.0;
     double ypos=0.0;
     glfwGetCursorPos(GLFW_window,&xpos,&ypos);
@@ -138,6 +287,7 @@ void MouseButtonCallback(GLFWwindow* GLFW_window,int button, int action, int mod
         CurrentlyActiveCollider=-1;
         CurrentlyActiveLayer=0;
     }
+    */
 }
 
 
@@ -192,7 +342,92 @@ int FindClickedElement(double touchscreenx,double touchscreeny){
 }
 
 void CursorPosCallback(GLFWwindow* GLFW_window, double xpos, double ypos){
-    if(CurrentlyActiveCollider!=-1){
+    if(draw_enabled&&drawMode==drawModeActive){     //set next point in line
+        dprintf(DBGT_INFO,"mid point");
+        double xtouchpos=0.0;
+        double ytouchpos=0.0;
+        glfwGetCursorPos(GLFW_window,&xtouchpos,&ytouchpos);
+        int xpos=(int32_t)xtouchpos;
+        int ypos=(int32_t)ytouchpos;
+        int screenresy=0;
+        int screenresx=0;
+        glfwGetWindowSize(GLFW_window,&screenresx,&screenresy);     //TODO make this global?
+        int32_t mapped_x_pos=0;
+        int32_t mapped_y_pos=0;
+        switch(mapPoints(&mapped_x_pos,&mapped_y_pos,xpos,screenresy-ypos,screenresx,screenresy,widthMM,heightMM)){
+        case mapPoints_return_from_o:
+            xpos=mapped_x_pos;
+            ypos=mapped_y_pos;
+            //intended fallthrough, no break
+        case mapPoints_return_from_s:
+            //transform touch position and mapped point into 1,1 coordinate system
+            xtouchpos=((double)xpos-screenresx/2)*mm_per_px/outerCone_rad_mm;
+            ytouchpos=((double)ypos-screenresy/2)*mm_per_px/outerCone_rad_mm;
+            uint32_t requieredCharsForXy=snprintf(NULL,0,"%lf %lf ",xtouchpos,ytouchpos)-1;
+            struct DynamicList* TempFloatStringForXy=create_DynamicList(sizeof(uint32_t),requieredCharsForXy,dynlisttype_utf32chars);
+            uint8_t* tempASCIIStringp=(uint8_t*)malloc((requieredCharsForXy+1)*sizeof(uint8_t));
+            snprintf((char*)tempASCIIStringp,requieredCharsForXy+1,"%lf %lf ",xtouchpos,ytouchpos);
+            utf8_to_utf32(tempASCIIStringp,requieredCharsForXy,TempFloatStringForXy->items);
+            free(tempASCIIStringp);
+
+            //close old line tag
+
+            //find out deltat
+            double deltat=(glfwGetTime()-stopDeltatimeForLine);
+            struct key_val_pair* line_ms_key_valp=(struct key_val_pair*)malloc(sizeof(struct key_val_pair));
+            line_ms_key_valp->key=stringToUTF32Dynlist("ms");
+            uint32_t requieredCharsForMs=snprintf(NULL,0,"%lf",deltat)-1;
+            struct DynamicList* TempFloatStringForMs=create_DynamicList(sizeof(uint32_t),requieredCharsForMs,dynlisttype_utf32chars);
+            tempASCIIStringp=(uint8_t*)malloc((requieredCharsForMs+1)*sizeof(uint8_t));
+            snprintf((char*)tempASCIIStringp,requieredCharsForMs+1,"%lf",deltat);
+            utf8_to_utf32(tempASCIIStringp,requieredCharsForMs,TempFloatStringForMs->items);
+            free(tempASCIIStringp);
+            line_ms_key_valp->value=TempFloatStringForMs;
+
+            //append x2 and y2 to last line element
+            uint32_t index_of_last_line_elmnt=(globalCommandBufferOutp->content->itemcnt-1);
+            struct xmlTreeElement* lastLineElementp=((struct xmlTreeElement**)globalCommandBufferOutp->content->items)[index_of_last_line_elmnt];
+            //create the requiered space for the full set of x1 y1 x2 y2 coordinates
+            struct key_val_pair* oldLineOldKeyValp=((struct key_val_pair**)lastLineElementp->attributes->items)[0];        //xycoord should be the first element
+            struct DynamicList* oldLineNewStringp=create_DynamicList(sizeof(uint32_t),oldLineOldKeyValp->value->itemcnt+requieredCharsForXy,dynlisttype_utf32chars);
+            memcpy(oldLineNewStringp->items,oldLineOldKeyValp->value->items,sizeof(uint32_t)*(oldLineOldKeyValp->value->itemcnt));          //copy over previous string x1 y1
+            memcpy(oldLineNewStringp->items+oldLineOldKeyValp->value->itemcnt,TempFloatStringForXy->items,sizeof(uint32_t)*(requieredCharsForXy));  //copy new string x2 y2
+            delete_DynList(oldLineOldKeyValp->value);    //delete old string
+            oldLineOldKeyValp->value=oldLineNewStringp;  //update reference from value
+
+
+
+
+
+
+            //create new line xml element
+            struct xmlTreeElement* newLineElementp=(struct xmlTreeElement*)malloc(sizeof(struct xmlTreeElement));
+            newLineElementp->name=stringToUTF32Dynlist("line");
+            newLineElementp->content=0;
+            newLineElementp->attributes=0;
+            newLineElementp->type=xmltype_tag;
+            //append to our global command buffer for later output
+            append_DynamicList(&(globalCommandBufferOutp->content),newLineElementp,sizeof(struct xmlTreeElement*),dynlisttype_xmlELMNTCollectionp);
+            newLineElementp->parent=globalCommandBufferOutp;
+
+
+
+            stopDeltatimeForLine=glfwGetTime();
+
+            struct key_val_pair* line_key_valp=(struct key_val_pair*)malloc(sizeof(struct key_val_pair));
+            line_key_valp->key=stringToUTF32Dynlist("xycoord");
+            line_key_valp->value=TempFloatStringForXy;
+            append_DynamicList(&(newLineElementp->attributes),line_key_valp,sizeof(struct key_val_pair*),dynlisttype_keyValuePairsp);
+
+            break;
+        case mapPoints_return_could_not_map:
+            break;
+        }
+
+
+    }
+
+    /*if(CurrentlyActiveCollider!=-1){
         struct DynamicList* AllColliderp=(((struct LayerCollection*)(AllLayerInfop->items))[CurrentlyActiveLayer]).colliderDLp;
         struct Collider CurrentCollider=((struct Collider*)(AllColliderp->items))[CurrentlyActiveCollider];
         float normalisedxCoord=(xpos-(int32_t)CurrentCollider.colliderLL_x)/((float)(CurrentCollider.colliderUR_x-CurrentCollider.colliderLL_x));
@@ -212,13 +447,13 @@ void CursorPosCallback(GLFWwindow* GLFW_window, double xpos, double ypos){
                 int screenresx=0;
                 int screenresy=0;
                 glfwGetWindowSize(GLFW_window,&screenresx,&screenresy);
-                ui_drawingplane_write(Canvasp,1,GlobalAppState.color,(uint32_t)floor(xpos),Canvasp->TextureSidelength-(uint32_t)floor(ypos),screenresx,screenresy);
+                ui_drawingplane_write(Canvasp,GlobalAppState.penrad,GlobalAppState.color,(uint32_t)floor(xpos),Canvasp->TextureSidelength-(uint32_t)floor(ypos),screenresx,screenresy);
                 if(draw_enabled==1){
                     draw_enabled=2;
                 }
             }
         }
-    }
+    }*/
 }
 
 void updateGUIvtx(struct GObject* initGUIp){
@@ -280,17 +515,8 @@ void processCommandXml(struct xmlTreeElement* CommandInput,int screenresx, int s
     if(command_delay*0.001>glfwGetTime()-time_command_start){     //delay not finished yet
         //process "continuous command"
         if(compareEqualDynamicUTF32List(stringToUTF32Dynlist("line"),currentCommand->name)){
-            //Position of the minigrid's center in mm
-            #define r_cone  57.0f
-            #define h_cone  80.0f
 
-            //Internal Conversions
-            #define mm_per_px_256 (widthMM/(screenresx*256.0f))
-            #define px_256_per_mm ((screenresx*256.0f)/widthMM)
-            #define mm_per_px (widthMM/(float)screenresx)
-            #define px_per_mm (screenresx/(float)widthMM)
 
-            float outerCone_rad_mm=h_cone*tanf(2*atanf(r_cone/h_cone));     //MaxRadius of our screen projection of the cone
 
             struct DynamicList* coordsp=utf32dynlist_to_floats(createCharMatchList(2,' ',' '),createCharMatchList(2,'e','e'),createCharMatchList(4,',',',','.','.'),getValueFromKeyName(currentCommand->attributes,stringToUTF32Dynlist("xycoord")));
 
@@ -322,9 +548,9 @@ void processCommandXml(struct xmlTreeElement* CommandInput,int screenresx, int s
 
             if(next_cycle_is_first){//make sure first point lands on x1 y1
                 //draw first point
-                ui_drawingplane_write(Canvasp,1,GlobalAppState.color,last_xpos_px,Canvasp->TextureSidelength-screenresy+last_ypos_px,screenresx,screenresy);
+                ui_drawingplane_write(Canvasp,GlobalAppState.penrad,GlobalAppState.color,last_xpos_px,Canvasp->TextureSidelength-screenresy+last_ypos_px,screenresx,screenresy);
                 //draw first point in mapped space
-                ui_drawingplane_write(Canvasp,1,GlobalAppState.color,last_mapped_xpos_px,Canvasp->TextureSidelength-screenresy+last_mapped_ypos_px,screenresx,screenresy);
+                ui_drawingplane_write(Canvasp,GlobalAppState.penrad,GlobalAppState.color,last_mapped_xpos_px,Canvasp->TextureSidelength-screenresy+last_mapped_ypos_px,screenresx,screenresy);
             }
             //draw line
             connect_points(((uint8_t**)(Canvasp->TexturePointerDLp->items))[0],Canvasp->TextureSidelength,GlobalAppState.color,last_xpos_px,Canvasp->TextureSidelength-screenresy+last_ypos_px,GlobalAppState.penrad,current_xpos_px,Canvasp->TextureSidelength-screenresy+current_ypos_px,GlobalAppState.penrad);
@@ -332,9 +558,9 @@ void processCommandXml(struct xmlTreeElement* CommandInput,int screenresx, int s
             connect_points(((uint8_t**)(Canvasp->TexturePointerDLp->items))[0],Canvasp->TextureSidelength,GlobalAppState.color,last_mapped_xpos_px,Canvasp->TextureSidelength-screenresy+last_mapped_ypos_px,GlobalAppState.penrad,current_mapped_xpos_px,Canvasp->TextureSidelength-screenresy+current_mapped_ypos_px,GlobalAppState.penrad);
 
             //draw second point
-            ui_drawingplane_write(Canvasp,1,GlobalAppState.color,current_xpos_px,Canvasp->TextureSidelength-screenresy+current_ypos_px,screenresx,screenresy);
+            ui_drawingplane_write(Canvasp,GlobalAppState.penrad,GlobalAppState.color,current_xpos_px,Canvasp->TextureSidelength-screenresy+current_ypos_px,screenresx,screenresy);
             //draw second point in mapped space
-            ui_drawingplane_write(Canvasp,1,GlobalAppState.color,current_mapped_xpos_px,Canvasp->TextureSidelength-screenresy+current_mapped_ypos_px,screenresx,screenresy);
+            ui_drawingplane_write(Canvasp,GlobalAppState.penrad,GlobalAppState.color,current_mapped_xpos_px,Canvasp->TextureSidelength-screenresy+current_mapped_ypos_px,screenresx,screenresy);
 
             //remember the last point and mapped point
             last_xpos_px=current_xpos_px;
@@ -364,18 +590,6 @@ void processCommandXml(struct xmlTreeElement* CommandInput,int screenresx, int s
             delete_DynList(gridValDynlistp);
         }else if(compareEqualDynamicUTF32List(stringToUTF32Dynlist("line"),currentCommand->name)){
 
-            //Position of the minigrid's center in mm
-            #define r_cone  57.0f
-            #define h_cone  80.0f
-
-            //Internal Conversions
-            #define mm_per_px_256 (widthMM/(screenresx*256.0f))
-            #define px_256_per_mm ((screenresx*256.0f)/widthMM)
-            #define mm_per_px (widthMM/(float)screenresx)
-            #define px_per_mm (screenresx/(float)widthMM)
-
-            float outerCone_rad_mm=h_cone*tanf(2*atanf(r_cone/h_cone));     //MaxRadius of our screen projection of the cone
-
             struct DynamicList* coordsp=utf32dynlist_to_floats(createCharMatchList(2,' ',' '),createCharMatchList(2,'e','e'),createCharMatchList(4,',',',','.','.'),getValueFromKeyName(currentCommand->attributes,stringToUTF32Dynlist("xycoord")));
 
             float interpolated_raw_x=((float*)coordsp->items)[2];
@@ -399,9 +613,9 @@ void processCommandXml(struct xmlTreeElement* CommandInput,int screenresx, int s
             connect_points(((uint8_t**)(Canvasp->TexturePointerDLp->items))[0],Canvasp->TextureSidelength,GlobalAppState.color,last_mapped_xpos_px,Canvasp->TextureSidelength-screenresy+last_mapped_ypos_px,GlobalAppState.penrad,current_mapped_xpos_px,Canvasp->TextureSidelength-screenresy+current_mapped_ypos_px,GlobalAppState.penrad);
 
             //draw second point
-            ui_drawingplane_write(Canvasp,1,GlobalAppState.color,current_xpos_px,Canvasp->TextureSidelength-screenresy+current_ypos_px,screenresx,screenresy);
+            ui_drawingplane_write(Canvasp,GlobalAppState.penrad,GlobalAppState.color,current_xpos_px,Canvasp->TextureSidelength-screenresy+current_ypos_px,screenresx,screenresy);
             //draw second point in mapped space
-            ui_drawingplane_write(Canvasp,1,GlobalAppState.color,current_mapped_xpos_px,Canvasp->TextureSidelength-screenresy+current_mapped_ypos_px,screenresx,screenresy);
+            ui_drawingplane_write(Canvasp,GlobalAppState.penrad,GlobalAppState.color,current_mapped_xpos_px,Canvasp->TextureSidelength-screenresy+current_mapped_ypos_px,screenresx,screenresy);
 
         }else{
 
@@ -430,12 +644,12 @@ int main(void){
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
     glfwWindowHint(GLFW_SAMPLES, 4);
     //window creation
-    #define FULLSCREEN
+    //#define FULLSCREEN
     #ifdef FULLSCREEN
     const GLFWvidmode* vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
     GLFWwindow* MainWindow = glfwCreateWindow(vidmode->width, vidmode->height, "Quantum Minigolf 2.0", glfwGetPrimaryMonitor(), NULL); //Fullscreen
     #else
-    GLFWwindow* MainWindow = glfwCreateWindow(3860, 2160, "Pa1nt debug", NULL, NULL);   //Windowed hd ready
+    GLFWwindow* MainWindow = glfwCreateWindow(1920, 1080, "Pa1nt debug", NULL, NULL);   //Windowed hd ready
 
     #endif // FULLSCREEN
 
@@ -444,9 +658,10 @@ int main(void){
         return -1;
     }
     glfwMakeContextCurrent(MainWindow);
-    //glfwSetMouseButtonCallback(MainWindow,MouseButtonCallback); CORONA
-    //glfwSetCursorPosCallback(MainWindow,CursorPosCallback);
-        dprintf(DBGT_INFO,"hier");
+    glfwSetMouseButtonCallback(MainWindow,MouseButtonCallback);
+    glfwSetKeyCallback(MainWindow,KeyCallback);
+    glfwSetCursorPosCallback(MainWindow,CursorPosCallback);
+
     glewExperimental = GL_TRUE;
     GLenum err = glewInit();
     if(GLEW_OK != err) {
@@ -527,7 +742,24 @@ int main(void){
         //Process Events
         glfwPollEvents();
         //processCommandXml(0);
-        processCommandXml(CommandInput,screenresx,screenresy);
+
+
+        if(drawMode==drawModeReload){
+            GlobalAppState.clear_drawingplane=1;
+            drawMode=drawModeInactive;
+            //create parent CommandBufferElement
+            struct xmlTreeElement* XmlOuputElmntp=(struct xmlTreeElement*)malloc(sizeof(struct xmlTreeElement));
+            XmlOuputElmntp->name=0;
+            XmlOuputElmntp->attributes=0;
+            XmlOuputElmntp->content=create_DynamicList(sizeof(struct xmlTreeElement**),1,xmltype_tag);
+            XmlOuputElmntp->parent=0;
+            XmlOuputElmntp->type=xmltype_tag;
+            ((struct xmlTreeElement**)XmlOuputElmntp->content->items)[0]=globalCommandBufferOutp;
+            globalCommandBufferOutp->parent=XmlOuputElmntp;
+            writeXML(xmlFileCommandOutp,XmlOuputElmntp);
+        }else if(drawMode==drawModeInactive){
+            processCommandXml(CommandInput,screenresx,screenresy);
+        }
 
         if(GlobalAppState.clear_drawingplane){
             ui_drawingplane_clear(Canvasp,screenresx,screenresy);
@@ -640,25 +872,25 @@ struct GObject* ui_backgroundplane_init(uint32_t screenresx, uint32_t screenresy
     //Asumes programm runs in fullscreen
     int textureNum=0;
     uint8_t* textureData=(uint8_t*)malloc(genBackgroundPlane->TextureSidelength*genBackgroundPlane->TextureSidelength*4*sizeof(uint8_t));
-    genBackgroundPlane->TexturePointerDLp=append_DynamicList(genBackgroundPlane->TexturePointerDLp,&textureData,sizeof(uint8_t*),ListType_TexturePointer);
+    append_DynamicList(&(genBackgroundPlane->TexturePointerDLp),&textureData,sizeof(uint8_t*),ListType_TexturePointer);
     projection_gen_largeConeGrid(projection_gen_mode_grid_white,0,0,((uint8_t**)(genBackgroundPlane->TexturePointerDLp->items))[textureNum],genBackgroundPlane->TextureSidelength,screenresx,screenresy,widthMM,heightMM);
     projection_gen_miniConeGrid(projection_gen_mode_grid_white,0,0,((uint8_t**)(genBackgroundPlane->TexturePointerDLp->items))[textureNum],genBackgroundPlane->TextureSidelength,screenresx,screenresy,widthMM,heightMM);
     textureNum++;
 
     textureData=(uint8_t*)malloc(genBackgroundPlane->TextureSidelength*genBackgroundPlane->TextureSidelength*4*sizeof(uint8_t));
-    genBackgroundPlane->TexturePointerDLp=append_DynamicList(genBackgroundPlane->TexturePointerDLp,&textureData,sizeof(uint8_t*),ListType_TexturePointer);
+    append_DynamicList(&(genBackgroundPlane->TexturePointerDLp),&textureData,sizeof(uint8_t*),ListType_TexturePointer);
     projection_gen_largeCylGrid(projection_gen_mode_grid_white,0,0,((uint8_t**)(genBackgroundPlane->TexturePointerDLp->items))[textureNum],genBackgroundPlane->TextureSidelength,screenresx,screenresy,widthMM,heightMM);
     projection_gen_miniCylGrid(projection_gen_mode_grid_white,0,0,((uint8_t**)(genBackgroundPlane->TexturePointerDLp->items))[textureNum],genBackgroundPlane->TextureSidelength,screenresx,screenresy,widthMM,heightMM);
     textureNum++;
 
     textureData=(uint8_t*)malloc(genBackgroundPlane->TextureSidelength*genBackgroundPlane->TextureSidelength*4*sizeof(uint8_t));
-    genBackgroundPlane->TexturePointerDLp=append_DynamicList(genBackgroundPlane->TexturePointerDLp,&textureData,sizeof(uint8_t*),ListType_TexturePointer);
+    append_DynamicList(&(genBackgroundPlane->TexturePointerDLp),&textureData,sizeof(uint8_t*),ListType_TexturePointer);
     projection_gen_largeConeGrid(projection_gen_mode_grid_color,0,0,((uint8_t**)(genBackgroundPlane->TexturePointerDLp->items))[textureNum],genBackgroundPlane->TextureSidelength,screenresx,screenresy,widthMM,heightMM);
     projection_gen_miniConeGrid(projection_gen_mode_grid_color,0,0,((uint8_t**)(genBackgroundPlane->TexturePointerDLp->items))[textureNum],genBackgroundPlane->TextureSidelength,screenresx,screenresy,widthMM,heightMM);
     textureNum++;
 
     textureData=(uint8_t*)malloc(genBackgroundPlane->TextureSidelength*genBackgroundPlane->TextureSidelength*4*sizeof(uint8_t));
-    genBackgroundPlane->TexturePointerDLp=append_DynamicList(genBackgroundPlane->TexturePointerDLp,&textureData,sizeof(uint8_t*),ListType_TexturePointer);
+    append_DynamicList(&(genBackgroundPlane->TexturePointerDLp),&textureData,sizeof(uint8_t*),ListType_TexturePointer);
     projection_gen_largeCylGrid(projection_gen_mode_grid_color,0,0,((uint8_t**)(genBackgroundPlane->TexturePointerDLp->items))[textureNum],genBackgroundPlane->TextureSidelength,screenresx,screenresy,widthMM,heightMM);
     projection_gen_miniCylGrid(projection_gen_mode_grid_color,0,0,((uint8_t**)(genBackgroundPlane->TexturePointerDLp->items))[textureNum],genBackgroundPlane->TextureSidelength,screenresx,screenresy,widthMM,heightMM);
     textureNum++;
@@ -691,14 +923,14 @@ struct GObject* ui_backgroundplane_init(uint32_t screenresx, uint32_t screenresy
         }
         uint8_t* imagedatap=read_bmp(imagepathp);
         textureData=(uint8_t*)malloc(genBackgroundPlane->TextureSidelength*genBackgroundPlane->TextureSidelength*4*sizeof(uint8_t));
-        genBackgroundPlane->TexturePointerDLp=append_DynamicList(genBackgroundPlane->TexturePointerDLp,&textureData,sizeof(uint8_t*),ListType_TexturePointer);
+        append_DynamicList(&(genBackgroundPlane->TexturePointerDLp),&textureData,sizeof(uint8_t*),ListType_TexturePointer);
         projection_gen_largeConeGrid(projection_gen_mode_grid_pic,imagedatap,((int*)(PicResDLp->items))[0],((uint8_t**)(genBackgroundPlane->TexturePointerDLp->items))[textureNum],genBackgroundPlane->TextureSidelength,screenresx,screenresy,widthMM,heightMM);
         projection_gen_miniConeGrid(projection_gen_mode_grid_pic,imagedatap,((int*)(PicResDLp->items))[0],((uint8_t**)(genBackgroundPlane->TexturePointerDLp->items))[textureNum],genBackgroundPlane->TextureSidelength,screenresx,screenresy,widthMM,heightMM);
         dprintf(DBGT_INFO,"gentexNum %d",textureNum);
         textureNum++;
 
         textureData=(uint8_t*)malloc(genBackgroundPlane->TextureSidelength*genBackgroundPlane->TextureSidelength*4*sizeof(uint8_t));
-        genBackgroundPlane->TexturePointerDLp=append_DynamicList(genBackgroundPlane->TexturePointerDLp,&textureData,sizeof(uint8_t*),ListType_TexturePointer);
+        append_DynamicList(&(genBackgroundPlane->TexturePointerDLp),&textureData,sizeof(uint8_t*),ListType_TexturePointer);
         projection_gen_largeCylGrid(projection_gen_mode_grid_pic,imagedatap,((int*)(PicResDLp->items))[0],((uint8_t**)(genBackgroundPlane->TexturePointerDLp->items))[textureNum],genBackgroundPlane->TextureSidelength,screenresx,screenresy,widthMM,heightMM);
         projection_gen_miniCylGrid(projection_gen_mode_grid_pic,imagedatap,((int*)(PicResDLp->items))[0],((uint8_t**)(genBackgroundPlane->TexturePointerDLp->items))[textureNum],genBackgroundPlane->TextureSidelength,screenresx,screenresy,widthMM,heightMM);
         textureNum++;
@@ -787,7 +1019,7 @@ struct GObject* ui_drawingplane_init(uint32_t screenresx,uint32_t screenresy){
 
     genDrawPlane->TexturePointerDLp=0;
     uint8_t* textureData=(uint8_t*)malloc(genDrawPlane->TextureSidelength*genDrawPlane->TextureSidelength*4*sizeof(uint8_t));
-    genDrawPlane->TexturePointerDLp=append_DynamicList(genDrawPlane->TexturePointerDLp,&textureData,sizeof(uint8_t*),ListType_TexturePointer);
+    append_DynamicList(&(genDrawPlane->TexturePointerDLp),&textureData,sizeof(uint8_t*),ListType_TexturePointer);
 
     ui_drawingplane_clear(genDrawPlane,screenresx,screenresy);
     glActiveTexture(GL_TEXTURE0+genDrawPlane->TextureUnitIndex);   //Select Texture unit (glBindTexture now uses this texture unit)
@@ -866,7 +1098,7 @@ struct GObject* ui_generate_gui(char* xmlFilepath,uint32_t screenresx,uint32_t s
     dprintf(DBGT_INFO,"Texture Resolution is %d",TextureResolution);
     //generate, bind, and update texture
     genGui->TexturePointerDLp=0;
-    genGui->TexturePointerDLp=append_DynamicList(genGui->TexturePointerDLp,&GUITexturep,sizeof(uint8_t*),ListType_TexturePointer);
+    append_DynamicList(&(genGui->TexturePointerDLp),&GUITexturep,sizeof(uint8_t*),ListType_TexturePointer);
     genGui->TextureSidelength=TextureResolution;
     genGui->TextureUnitIndex=2; //TODO don't hardcode?! for all of them, make function that, wenn called spits out a number and increments static
     glActiveTexture(GL_TEXTURE0+genGui->TextureUnitIndex);   //Select Texture unit (glBindTexture now uses this texture unit)

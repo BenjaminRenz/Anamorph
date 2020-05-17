@@ -32,7 +32,7 @@ struct DynamicList{
     void* items; //Pointing to Sublist or Items
 };
 
-struct DynamicList* append_DynamicList(struct DynamicList* ListOrNullPtr,void* newElement,size_t sizeofListElements,uint32_t typeId);
+void append_DynamicList(struct DynamicList** ListOrNullPtr,void* newElement,size_t sizeofListElements,uint32_t typeId);
 struct DynamicList* create_DynamicList(size_t sizeofListElements,uint32_t NumOfNewElements,uint32_t typeId);
 struct DynamicList* createCharMatchList(uint32_t argumentCount,...);
 struct DynamicList* createWordMatchList(uint32_t argumentCount,...);
