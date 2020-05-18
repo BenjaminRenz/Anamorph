@@ -31,8 +31,8 @@
 //Grid Settings in mm
 #define grid_linedist 15.0f
 //in mm from left bottom corner for small display map grid
-#define scale_cone 1
-#define scale_cyl 1
+#define scale_cone 1.8
+#define scale_cyl 1.8
 
 //Position of the minigrid's center in mm
 #define lb_conerep_x 10.0f

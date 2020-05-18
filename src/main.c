@@ -18,6 +18,9 @@
 #include "glfw3/glfw3.h"
 #include "glUtils/gl_utils.h"
 
+#define recorde_deltat_multip 2
+
+
 //Position of the minigrid's center in mm
 #define r_cone  57.0f
 #define h_cone  80.0f
@@ -153,6 +156,7 @@ void MouseButtonCallback(GLFWwindow* GLFW_window,int button, int action, int mod
 
             //find out deltat
             double deltat=(glfwGetTime()-stopDeltatimeForLine);
+            deltat*=1000;
             struct key_val_pair delay_ms_key_val;
             delay_ms_key_val.key=stringToUTF32Dynlist("ms");
             uint32_t requieredCharsForMs=snprintf(NULL,0,"%lf",deltat);
@@ -253,6 +257,7 @@ void MouseButtonCallback(GLFWwindow* GLFW_window,int button, int action, int mod
 
                 //find out deltat
                 double deltat=(glfwGetTime()-stopDeltatimeForLine);
+                deltat*=1000*recorde_deltat_multip;
                 struct key_val_pair line_ms_key_val;
                 line_ms_key_val.key=stringToUTF32Dynlist("ms");
                 uint32_t requieredCharsForMs=snprintf(NULL,0,"%lf",deltat);
@@ -409,6 +414,7 @@ void CursorPosCallback(GLFWwindow* GLFW_window, double xpos, double ypos){
 
             //find out deltat
             double deltat=(glfwGetTime()-stopDeltatimeForLine);
+            deltat*=1000*recorde_deltat_multip;
             struct key_val_pair line_ms_key_val;
             line_ms_key_val.key=stringToUTF32Dynlist("ms");
             uint32_t requieredCharsForMs=snprintf(NULL,0,"%lf",deltat);
@@ -686,7 +692,7 @@ int main(void){
     const GLFWvidmode* vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
     GLFWwindow* MainWindow = glfwCreateWindow(vidmode->width, vidmode->height, "Quantum Minigolf 2.0", glfwGetPrimaryMonitor(), NULL); //Fullscreen
     #else
-    GLFWwindow* MainWindow = glfwCreateWindow(2*1920, 2*1080, "Pa1nt debug", NULL, NULL);   //Windowed hd ready
+    GLFWwindow* MainWindow = glfwCreateWindow(1920, 1080, "Pa1nt debug", NULL, NULL);   //Windowed hd ready
 
     #endif // FULLSCREEN
 
